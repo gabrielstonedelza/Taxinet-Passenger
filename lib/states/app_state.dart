@@ -4,15 +4,12 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'dart:convert';
-
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 
-import '../requests/googlemap_requests.dart';
 
 class AppState with ChangeNotifier {
-  static const apiKey = "AIzaSyB47pcLuY-k7T1fDn0aJiA7K8UHV9CWIWY";
+  static const apiKey = "AIzaSyCNrE7Zbx75Y63T5PcPuio7-yIYDgMPSc8";
   final String baseUrl = "https://maps.googleapis.com/maps/api/directions/json";
 
 
@@ -23,11 +20,11 @@ class AppState with ChangeNotifier {
   static LatLng? _lastPosition = _initialPosition;
   final Set<Marker> _markers = {};
   final Set<Polyline> _polyLines = {};
-  final GoogleMapsServices _googleMapsServices = GoogleMapsServices();
-  Duration duration = Duration();
+  // final GoogleMapsServices _googleMapsServices = GoogleMapsServices();
+
   LatLng get initialPosition => _initialPosition!;
   LatLng get lastPosition => _lastPosition!;
-  GoogleMapsServices get googleMapServices => _googleMapsServices;
+  // GoogleMapsServices get googleMapServices => _googleMapsServices;
   GoogleMapController get mapController => _mapController;
   Set<Marker> get markers => _markers;
   Set<Polyline> get polyLines => _polyLines;
@@ -48,7 +45,6 @@ class AppState with ChangeNotifier {
 
     http.Response response = await http.get(uri);
     Map values = jsonDecode(response.body);
-    print(response.body);
     final points = values["routes"][0]["overview_polyline"]["points"];
     final legs = values['routes'][0]['legs'];
 
@@ -77,9 +73,7 @@ class AppState with ChangeNotifier {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately.
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
+      return Future.error('Location permissions are permanently denied, we cannot request permissions.');
     }
 
     return await userLocation();
@@ -88,7 +82,7 @@ class AppState with ChangeNotifier {
   Future<void> userLocation() async {
     Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high,timeLimit: const Duration(seconds: 10));
     List<Placemark> placemark = await placemarkFromCoordinates(position.latitude, position.longitude);
-    print(placemark);
+    // print(placemark);
 
     _initialPosition = LatLng(position.latitude, position.longitude);
     locationController.text = placemark[2].street!;
@@ -163,8 +157,7 @@ class AppState with ChangeNotifier {
     double longitude = locations[0].longitude;
     LatLng destination = LatLng(latitude, longitude);
     addMarker(destination, intendedDestination);
-    String route = await getRouteCoordinates(
-        _initialPosition!, destination);
+    String route = await getRouteCoordinates(_initialPosition!, destination);
     createRoute(route);
     notifyListeners();
   }
@@ -179,14 +172,4 @@ class AppState with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<double> getPositionBetweenRoutes(LatLng startLatLng,LatLng endLatLng)async{
-    final meters = Geolocator.distanceBetween(startLatLng.latitude, startLatLng.longitude, endLatLng.latitude, endLatLng.longitude);
-
-    return meters / 500;
-  }
-
-  Future<Placemark> getAddressFromCoordinates(LatLng position)async{
-    List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-    return placemarks.first;
-  }
 }
