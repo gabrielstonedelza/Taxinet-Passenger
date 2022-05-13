@@ -4,7 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 
-const apiKey = "AIzaSyB47pcLuY-k7T1fDn0aJiA7K8UHV9CWIWY";
+const apiKey = "";
 final String baseUrl = "https://maps.googleapis.com/maps/api/directions/json";
 
 class GoogleMapsServices{
