@@ -3,10 +3,8 @@ import 'package:get/get.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:taxinet/passenger/home/passenger_home.dart';
+import 'package:taxinet/passenger/home/ride/request_ride.dart';
 import 'package:taxinet/views/login/loginview.dart';
-
-import 'constants/app_colors.dart';
 import 'driver/home/driver_home.dart';
 
 
@@ -18,28 +16,30 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+
   final storage = GetStorage();
   late String username = "";
   late String token = "";
   late String userType = "";
   bool hasToken = false;
-
   @override
   void initState() {
     // TODO: implement initState
+
     super.initState();
     if(storage.read("username") != null && storage.read("userToken") != null){
       username = storage.read("username");
       setState(() {
         hasToken = true;
       });
+
     }
 
-    if(hasToken && storage.read("user_type")=="Driver"){
+    if(hasToken && storage.read("user_type") == "Driver"){
       Timer(const Duration(seconds: 7),()=> Get.offAll(() => const DriverHome()));
     }
-    if(hasToken && storage.read("user_type")=="Passenger"){
-      Timer(const Duration(seconds: 7),()=> Get.offAll(() => const PassengerHome()));
+    if(hasToken && storage.read("user_type") == "Passenger"){
+      Timer(const Duration(seconds: 7),()=> Get.offAll(() => const RequestRide()));
     }
     if(storage.read("username") == null && storage.read("userToken") == null && storage.read("user_type") == null){
       Timer(const Duration(seconds: 7),()=> Get.offAll(() => const LoginView()));
@@ -47,9 +47,15 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.amber,
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -58,8 +64,8 @@ class _SplashScreenState extends State<SplashScreen> {
               loadDuration: const Duration(seconds: 5),
               // waveDuration: const Duration(seconds: 4),
               text: 'Taxinet',
-              waveColor: primaryColor,
-              boxBackgroundColor: Colors.black,
+              waveColor: Colors.black,
+              boxBackgroundColor: Colors.amber,
               textStyle: const TextStyle(
                 fontSize: 60.0,
                 fontWeight: FontWeight.bold,

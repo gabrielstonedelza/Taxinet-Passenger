@@ -24,11 +24,12 @@ class _LoginViewState extends State<LoginView> {
     setState(() {
       isPosting = true;
     });
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 4));
     setState(() {
       isPosting = false;
     });
   }
+
 
   @override
   void initState() {
@@ -36,14 +37,6 @@ class _LoginViewState extends State<LoginView> {
     super.initState();
     _usernameController = TextEditingController();
     _passwordController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    _usernameController.dispose();
-    _passwordController.dispose();
   }
 
 
@@ -54,7 +47,7 @@ class _LoginViewState extends State<LoginView> {
       body: ListView(
         children: [
           const SizedBox(height: 20,),
-          Image.asset("assets/images/taxinet_new.png",height: 400,),
+          Image.asset("assets/images/taxinet_new.png",height: 250,),
           Padding(
             padding: const EdgeInsets.all(18.0),
             child: Form(
@@ -148,6 +141,9 @@ class _LoginViewState extends State<LoginView> {
                             snackPosition: SnackPosition.BOTTOM,
                             backgroundColor: Colors.red
                         );
+                        setState(() {
+                          isPosting = false;
+                        });
                         return;
                       } else {
                         Provider.of<LoginController>(context,listen: false).loginUser(_usernameController.text, _passwordController.text);
