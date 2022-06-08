@@ -2,17 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:provider/provider.dart';
-import 'package:taxinet/blocs/application_bloc.dart';
-import 'package:taxinet/controllers/login/login_controller.dart';
+
 import 'package:taxinet/splash.dart';
 import 'package:taxinet/states/app_state.dart';
 import 'package:get/get.dart';
+
+import 'g_controller/login_controller.dart';
+import 'g_controller/map_controller.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   await GetStorage.init();
+  Get.put(MyLoginController());
+  Get.put(DeMapController());
   runApp(const MyApp());
 }
 
@@ -25,7 +29,6 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create:(context)=> AppState()),
-        ChangeNotifierProvider(create:(context)=> LoginController()),
       ],
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,

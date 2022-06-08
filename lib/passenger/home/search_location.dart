@@ -25,6 +25,7 @@ class _SearchLocationState extends State<SearchLocation> {
   late String uToken = "";
   var items;
   bool isSearching = false;
+  late Timer _timer;
 
   @override
   void initState() {
@@ -35,6 +36,9 @@ class _SearchLocationState extends State<SearchLocation> {
       uToken = storage.read("userToken");
     }
     appState.getPassengersSearchedDestinations(uToken);
+    _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
+      appState.getPassengersSearchedDestinations(uToken);
+    });
     super.initState();
   }
 

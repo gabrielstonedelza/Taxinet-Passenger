@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,10 +11,11 @@ import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:taxinet/passenger/home/search_location.dart';
 
 import '../../../constants/app_colors.dart';
-import '../../../controllers/login/login_controller.dart';
+
 import '../../../states/app_state.dart';
 import '../../../views/login/loginview.dart';
 import 'package:http/http.dart' as http;
+
 
 class RequestRide extends StatefulWidget {
   const RequestRide({Key? key}) : super(key: key);
@@ -29,258 +32,85 @@ class _RequestRideState extends State<RequestRide> {
   late String username = "";
   late String uToken = "";
   var items;
+  late Timer _timer;
+  final deMapController = DeMapController.to;
+  late List triggeredNotifications = [];
+  late List triggered = [];
+  late List yourNotifications = [];
+  late List notRead = [];
+  late List allNotifications = [];
+  late List allNots = [];
+  bool isLoading = true;
+  bool isRead = true;
+  late String passengerPickUp = "";
+  late String passengerPickUpPlaceId = "";
+
+  String driver = "";
 
   @override
   void initState() {
     // TODO: implement initState
     destinationFocus = FocusNode();
     final appState = Provider.of<AppState>(context, listen: false);
-    if (storage.read("userToken") != null) {
-      uToken = storage.read("userToken");
-    }
 
-    appState.getPassengersSearchedDestinations(uToken);
+    deMapController.getCurrentLocation().listen((position) {
+      centerScreen(position);
+    });
     super.initState();
   }
-  logoutUser() async {
-    storage.remove("username");
-    Get.offAll(() => const LoginView());
-    const logoutUrl = "https://taxinetghana.xyz/auth/token/logout";
-    final myLink = Uri.parse(logoutUrl);
-    http.Response response = await http.post(myLink, headers: {
-      'Accept': 'application/json',
-      "Authorization": "Token $uToken"
-    });
 
-    if (response.statusCode == 200) {
-      Get.snackbar("Success", "You were logged out",
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: snackColor);
-      storage.remove("username");
-      storage.remove("userToken");
-      storage.remove("user_type");
-      Get.offAll(() => const LoginView());
-    }
-  }
+
+  //
+  // logoutUser() async {
+  //   storage.remove("username");
+  //   Get.offAll(() => const LoginView());
+  //   const logoutUrl = "https://taxinetghana.xyz/auth/token/logout";
+  //   final myLink = Uri.parse(logoutUrl);
+  //   http.Response response = await http.post(myLink, headers: {
+  //     'Accept': 'application/json',
+  //     "Authorization": "Token $uToken"
+  //   });
+  //
+  //   if (response.statusCode == 200) {
+  //     Get.snackbar("Success", "You were logged out",
+  //         colorText: Colors.white,
+  //         snackPosition: SnackPosition.BOTTOM,
+  //         backgroundColor: snackColor);
+  //     storage.remove("username");
+  //     storage.remove("userToken");
+  //     storage.remove("user_type");
+  //     Get.offAll(() => const LoginView());
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
-    final loginController = Provider.of<LoginController>(context);
+
     return Scaffold(
       body: SafeArea(
         child: ListView(
           children: [
-            Stack(
-              children: [
-                SizedBox(
-                  height: MediaQuery.of(context).size.height / 2,
-                  width: MediaQuery.of(context).size.width,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: GoogleMap(
-                      initialCameraPosition: CameraPosition(
-                          target: appState.initialPosition, zoom: 14.0),
-                      myLocationButtonEnabled: false,
-                      zoomControlsEnabled: false,
-                      mapType: MapType.normal,
-                      onMapCreated: (GoogleMapController controller) {
-                        _mapController.complete(controller);
-                      },
-                      myLocationEnabled: true,
-                      compassEnabled: true,
-                      markers: appState.markers,
-                      onCameraMove: appState.onCameraMove,
-                      polylines: appState.polyLines,
-                    ),
-                  ),
-                ),
-                Positioned(
-                    top: 20,
-                    left: 10,
-                    child: IconButton(
-                      icon: Image.asset(
-                        "assets/images/grid.png",
-                        width: 40,
-                        height: 40,
-                      ),
-                      onPressed: () {
-                        showMaterialModalBottomSheet(
-                          context: context,
-                          builder: (context) => SingleChildScrollView(
-                            controller: ModalScrollController.of(context),
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height / 1.2,
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.close),
-                                        onPressed: () {
-                                          Get.back();
-                                        },
-                                      )
-                                    ],
-                                  ),
-                                  const SizedBox(
-                                    height: 10,
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(18.0),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Consumer<LoginController>(
-                                            builder: (context, userData, child) {
-                                          return Text(userData.username,style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 20,),);
-                                        }),
-                                        Consumer<LoginController>(
-                                            builder: (context, userData, child) {
-                                          return CircleAvatar(
-                                            backgroundImage: NetworkImage(
-                                                userData.userProfilePic),
-                                            radius: 30,
-                                          );
-                                        }),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(18.0),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Container(
-                                            child: Column(
-                                              children: const [
-                                                Icon(Icons.info_outlined),
-                                                SizedBox(height: 10,),
-                                                Text("Info")
-                                              ],
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                            ),
-                                            width: 100,
-                                            height: 100,
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey[300],
-                                              borderRadius: const BorderRadius.only(
-                                                topRight: Radius.circular(10),
-                                                topLeft: Radius.circular(10),
-                                                bottomLeft: Radius.circular(10),
-                                                bottomRight: Radius.circular(10),
-                                              )
-                                            ),
-                                          ),
-                                        ),
-                                        
-                                        Expanded(
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 10.0),
-                                            child: Container(
-                                              child: Column(
-                                                children: const [
-                                                  Icon(Icons.access_time_sharp),
-                                                  SizedBox(height: 10,),
-                                                  Text("Trips")
-                                                ],
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                              ),
-                                              width: 100,
-                                              height: 100,
-                                              decoration: BoxDecoration(
-                                                  color: Colors.grey[300],
-                                                  borderRadius: const BorderRadius.only(
-                                                    topRight: Radius.circular(10),
-                                                    topLeft: Radius.circular(10),
-                                                    bottomLeft: Radius.circular(10),
-                                                    bottomRight: Radius.circular(10),
-                                                  )
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-
-                                        Expanded(
-
-                                          child: Padding(
-                                            padding: const EdgeInsets.only(left: 10.0),
-                                            child: Container(
-                                              child: Column(
-                                                children: const [
-                                                  Icon(Icons.notifications_outlined),
-                                                  SizedBox(height: 10,),
-                                                  Text("Notifications")
-                                                ],
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                              ),
-                                              width: 100,
-                                              height: 100,
-                                              decoration: BoxDecoration(
-                                                  color: Colors.grey[300],
-                                                  borderRadius: const BorderRadius.only(
-                                                    topRight: Radius.circular(10),
-                                                    topLeft: Radius.circular(10),
-                                                    bottomLeft: Radius.circular(10),
-                                                    bottomRight: Radius.circular(10),
-                                                  )
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20,),
-                                  const Divider(height: 10,),
-                                  const SizedBox(height: 20,),
-                                  ListTile(
-                                    leading: Image.asset("assets/images/settings.png",width: 20,height: 20,),
-                                    title: const Text("Settings"),
-                                    subtitle: const Text("Edit profile"),
-                                    onTap: (){},
-                                  ),
-                                  const SizedBox(height: 20,),
-                                  ListTile(
-                                    leading: const Icon(Icons.logout),
-                                    title: const Text("Logout"),
-                                    onTap: (){
-                                      Get.defaultDialog(
-                                          buttonColor: primaryColor,
-                                          title: "Confirm Logout",
-                                          middleText: "Are you sure you want to logout?",
-                                          confirm: RawMaterialButton(
-                                              shape: const StadiumBorder(),
-                                              fillColor: primaryColor,
-                                              onPressed: () {
-                                                logoutUser();
-                                                Get.back();
-                                              },
-                                              child: const Text(
-                                                "Yes",
-                                                style: TextStyle(color: Colors.white),
-                                              )),
-                                          cancel: RawMaterialButton(
-                                              shape: const StadiumBorder(),
-                                              fillColor: primaryColor,
-                                              onPressed: () {
-                                                Get.back();
-                                              },
-                                              child: const Text(
-                                                "Cancel",
-                                                style: TextStyle(color: Colors.white),
-                                              )));
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ))
-              ],
+            SizedBox(
+              height: MediaQuery.of(context).size.height / 1.8,
+              width: MediaQuery.of(context).size.width,
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                    target: LatLng(appState.lat,appState.lng), zoom: 14.0),
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapType: MapType.normal,
+                onMapCreated: (GoogleMapController controller) {
+                  _mapController.complete(controller);
+                  controller.setMapStyle(Utils.mapStyle);
+                },
+                myLocationEnabled: true,
+                trafficEnabled: true,
+                compassEnabled: true,
+                markers: appState.markers,
+                onCameraMove: appState.onCameraMove,
+                polylines: appState.polyLines,
+              ),
             ),
             Card(
               elevation: 5,
@@ -320,14 +150,7 @@ class _RequestRideState extends State<RequestRide> {
                     const SizedBox(
                       height: 10,
                     ),
-                    appState.loading
-                        ? const Center(
-                            child: CircularProgressIndicator.adaptive(
-                              strokeWidth: 6,
-                              backgroundColor: primaryColor,
-                            ),
-                          )
-                        : Container(
+                     Container(
                             decoration: const BoxDecoration(),
                             height: 300,
                             child: ListView.builder(
@@ -354,11 +177,7 @@ class _RequestRideState extends State<RequestRide> {
                                             ),
                                           ),
                                         ),
-                                        // Text(
-                                        //   items['searched_destination'],
-                                        //   style: const TextStyle(
-                                        //       color: Colors.black87),
-                                        // ),
+
                                       ],
                                     ),
                                     subtitle: const Divider(),
@@ -382,23 +201,247 @@ class _RequestRideState extends State<RequestRide> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: defaultTextColor2,
-        onPressed: () async {
-          setState(() {
-            hasLocation = false;
-          });
-          appState.polyLines.clear();
-          appState.markers.clear();
-          final GoogleMapController controller = await _mapController.future;
-          controller.animateCamera(CameraUpdate.newCameraPosition(
-              CameraPosition(target: appState.initialPosition, zoom: 11)));
-        },
-        child: const Icon(
-          Icons.center_focus_strong,
-          color: primaryColor,
-        ),
-      ),
     );
   }
+  Future<void> centerScreen(Position position)async{
+    final GoogleMapController controller = await _mapController.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(position.latitude,position.longitude),zoom: 15,bearing: position.heading )));
+  }
+}
+class Utils {
+  static String mapStyle = ''' 
+  [
+  {
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#1d2c4d"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#8ec3b9"
+      }
+    ]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#1a3646"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.country",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#4b6878"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.land_parcel",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#64779e"
+      }
+    ]
+  },
+  {
+    "featureType": "administrative.province",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#4b6878"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.man_made",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#334e87"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.natural",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#023e58"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#283d6a"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#6f9ba5"
+      }
+    ]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#1d2c4d"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#023e58"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#3C7680"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#304a7d"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#98a5be"
+      }
+    ]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#1d2c4d"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#2c6675"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [
+      {
+        "color": "#255763"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#b0d5ce"
+      }
+    ]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#023e58"
+      }
+    ]
+  },
+  {
+    "featureType": "transit",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#98a5be"
+      }
+    ]
+  },
+  {
+    "featureType": "transit",
+    "elementType": "labels.text.stroke",
+    "stylers": [
+      {
+        "color": "#1d2c4d"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.line",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#283d6a"
+      }
+    ]
+  },
+  {
+    "featureType": "transit.station",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#3a4762"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [
+      {
+        "color": "#0e1626"
+      }
+    ]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.fill",
+    "stylers": [
+      {
+        "color": "#4e6d70"
+      }
+    ]
+  }
+]
+  ''';
 }

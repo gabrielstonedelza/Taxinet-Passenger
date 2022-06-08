@@ -1,23 +1,20 @@
 import 'dart:async';
-
-import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
-import 'package:flutter/widgets.dart';
-
-import 'package:get/get.dart';
-import 'package:get/get_navigation/get_navigation.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:internet_connection_checker/internet_connection_checker.dart';
-import 'package:provider/provider.dart';
-import 'package:taxinet/passenger/home/passenger_map.dart';
-import 'package:taxinet/passenger/home/ride/request_ride.dart';
-import 'package:taxinet/views/mapview.dart';
-
-import '../../constants/app_colors.dart';
-import '../../controllers/login/login_controller.dart';
-import '../../states/app_state.dart';
-import '../../views/login/loginview.dart';
+import 'dart:convert';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:get/get.dart';
+import 'package:provider/provider.dart';
+import 'package:taxinet/passenger/home/pages/notifications.dart';
+import 'package:taxinet/passenger/home/pages/profile.dart';
+import 'package:taxinet/passenger/home/pages/rides.dart';
+import 'package:taxinet/passenger/home/ride/request_ride.dart';
+
+import '../../controllers/notifications/localnotification_manager.dart';
+import '../../states/app_state.dart';
+import 'bidding_page.dart';
+import 'driveronroute.dart';
 
 class PassengerHome extends StatefulWidget {
   const PassengerHome({Key? key}) : super(key: key);
@@ -26,188 +23,262 @@ class PassengerHome extends StatefulWidget {
   State<PassengerHome> createState() => _PassengerHomeState();
 }
 
-class _PassengerHomeState extends State<PassengerHome> {
-  final storage = GetStorage();
+class _PassengerHomeState extends State<PassengerHome> with SingleTickerProviderStateMixin{
+  TabController? _tabController;
+  int selectedIndex = 0;
 
-  bool isFetching = false;
-  bool hasInternet = false;
-  late String uToken = "";
-  late StreamSubscription internetSubscription;
-  void _startFetching()async{
+  onTabClicked(int index) {
     setState(() {
-      isFetching = true;
+      selectedIndex = index;
+      _tabController!.index = selectedIndex;
     });
-    await Future.delayed(const Duration(seconds: 10));
+  }
+  final Completer<GoogleMapController> _mapController = Completer();
+  late FocusNode destinationFocus;
+  bool hasLocation = false;
+  final storage = GetStorage();
+  late String username = "";
+  late String uToken = "";
+  var items;
+  late Timer _timer;
+  final deMapController = DeMapController.to;
+  late List triggeredNotifications = [];
+  late List triggered = [];
+  late List yourNotifications = [];
+  late List notRead = [];
+  late List allNotifications = [];
+  late List allNots = [];
+  bool isLoading = true;
+  bool isRead = true;
+  late String passengerPickUp = "";
+  late String passengerPickUpPlaceId = "";
+
+  String driver = "";
+
+  Future<void> getAllTriggeredNotifications(String token) async {
+    const url = "https://taxinetghana.xyz/user_triggerd_notifications/";
+    var myLink = Uri.parse(url);
+    final response = await http.get(myLink, headers: {
+      "Authorization": "Token $uToken"
+    });
+    if(response.statusCode == 200){
+      final codeUnits = response.body.codeUnits;
+      var jsonData = const Utf8Decoder().convert(codeUnits);
+      triggeredNotifications = json.decode(jsonData);
+      triggered.assignAll(triggeredNotifications);
+    }
+  }
+
+  Future<void> getAllUnReadNotifications(String token) async {
+    const url = "https://taxinetghana.xyz/user_notifications/";
+    var myLink = Uri.parse(url);
+    final response = await http.get(myLink, headers: {
+      "Authorization": "Token $uToken"
+    });
+    if(response.statusCode == 200){
+
+      final codeUnits = response.body.codeUnits;
+      var jsonData = const Utf8Decoder().convert(codeUnits);
+      yourNotifications = json.decode(jsonData);
+      notRead.assignAll(yourNotifications);
+
+    }
+  }
+
+  Future<void> getAllNotifications(String token) async {
+    const url = "https://taxinetghana.xyz/notifications/";
+    var myLink = Uri.parse(url);
+    final response = await http.get(myLink, headers: {
+      "Authorization": "Token $uToken"
+    });
+    if(response.statusCode == 200){
+      final codeUnits = response.body.codeUnits;
+      var jsonData = const Utf8Decoder().convert(codeUnits);
+      allNotifications = json.decode(jsonData);
+      allNots.assignAll(allNotifications);
+    }
     setState(() {
-      isFetching = false;
+      isLoading = false;
+      allNotifications = allNotifications;
     });
   }
 
+  unTriggerNotifications(int id)async{
+    final requestUrl = "https://taxinetghana.xyz/user_read_notifications/$id/";
+    final myLink = Uri.parse(requestUrl);
+    final response = await http.put(myLink, headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      'Accept': 'application/json',
+      "Authorization": "Token $uToken"
+    },body: {
+      "notification_trigger": "Not Triggered",
+    });
+    if(response.statusCode == 200){
 
+    }
+  }
+  updateReadNotification(int id)async{
+    final requestUrl = "https://taxinetghana.xyz/user_read_notifications/$id/";
+    final myLink = Uri.parse(requestUrl);
+    final response = await http.put(myLink, headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      'Accept': 'application/json',
+      "Authorization": "Token $uToken"
+    },body: {
+      "read": "Read",
+    });
+    if(response.statusCode == 200){
+
+    }
+  }
+  Future<void> fetchRideDetail(String rideId) async {
+    final detailRideUrl = "https://taxinetghana.xyz/ride_requests/$rideId";
+    final myLink = Uri.parse(detailRideUrl);
+    http.Response response = await http.get(myLink, headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": "Token $uToken"
+    });
+    if (response.statusCode == 200) {
+      final codeUnits = response.body;
+      var jsonData = jsonDecode(codeUnits);
+      passengerPickUp = jsonData['pick_up'];
+      passengerPickUpPlaceId = jsonData['passengers_pick_up_place_id'];
+
+    } else {
+      Get.snackbar("Sorry", "please check your internet connection");
+    }
+
+  }
 
   @override
   void initState() {
     // TODO: implement initState
-
-    super.initState();
-    _startFetching();
-    internetSubscription = InternetConnectionChecker().onStatusChange.listen((status) {
-      setState(() {
-        hasInternet = status == InternetConnectionStatus.connected;
-      });
-    });
+    destinationFocus = FocusNode();
+    _tabController = TabController(length: 4, vsync: this);
+    final appState = Provider.of<AppState>(context, listen: false);
     if (storage.read("userToken") != null) {
       uToken = storage.read("userToken");
     }
-  }
 
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-    internetSubscription.cancel();
-  }
-  logoutUser() async {
-    storage.remove("username");
-    Get.offAll(() => const LoginView());
-    const logoutUrl = "https://taxinetghana.xyz/auth/token/logout";
-    final myLink = Uri.parse(logoutUrl);
-    http.Response response = await http.post(myLink, headers: {
-      'Accept': 'application/json',
-      "Authorization": "Token $uToken"
+    appState.getPassengersSearchedDestinations(uToken);
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      appState.getPassengersSearchedDestinations(uToken);
     });
 
-    if (response.statusCode == 200) {
-      Get.snackbar("Success", "You were logged out",
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: snackColor);
-      storage.remove("username");
-      storage.remove("userToken");
-      storage.remove("user_type");
-      Get.offAll(() => const LoginView());
-    }
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      getAllTriggeredNotifications(uToken);
+      getAllUnReadNotifications(uToken);
+      for(var i in triggered){
+        localNotificationManager.showAcceptedRideNotification(i['notification_title'],i['notification_message']);
+        localNotificationManager.showRejectedRideNotification(i['notification_title'],i['notification_message']);
+        localNotificationManager.showDriverArrivalNotification(i['notification_title'],i['notification_message']);
+        localNotificationManager.showCompletedRideNotification(i['notification_title'],i['notification_message']);
+        localNotificationManager.showBidCompleteNotification(i['notification_title'],i['notification_message']);
+      }
+      for(var i in notRead){
+        if(i['notification_title'] == "Ride was accepted" && i['read'] == "Not Read"){
+          Get.to(()=> BiddingPage(rideId:i['ride_id'],driver:i['notification_from'].toString()));
+          updateReadNotification(i['id']);
+          setState(() {
+            driver = i['notification_from'].toString();
+          });
+          fetchRideDetail(i['ride_id']);
+        }
+        if(i['notification_title'] == "Bidding Accepted" && i['read'] == "Not Read"){
+          Get.to(()=> DriverOnRoute(rideId:i['ride_id'],driver:i['notification_from'].toString(),pickUp:passengerPickUp,pickIpId:passengerPickUpPlaceId));
+          updateReadNotification(i['id']);
+        }
+      }
+    });
+
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      for(var e in triggered){
+        unTriggerNotifications(e["id"]);
+      }
+    });
+    localNotificationManager.setOnAcceptedRideNotificationReceive(onRideAcceptedNotification);
+    localNotificationManager.setOnAcceptedRideNotificationClick(onRideAcceptedNotificationClick);
+    localNotificationManager.setOnRejectedRideNotificationReceive(onRideRejectedNotification);
+    localNotificationManager.setOnRejectedRideNotificationClick(onRideRejectedNotificationClick);
+    localNotificationManager.setOnDriverArrivalNotificationReceive(onRideDriverArrivalNotification);
+    localNotificationManager.setOnDriverArrivalNotificationClick(onRideDriverArrivalNotificationClick);
+    localNotificationManager.setOnCompletedRideNotificationReceive(onRideCompletedNotification);
+    localNotificationManager.setOnCompletedRideNotificationClick(onRideCompletedNotificationClick);
+    localNotificationManager.setOnBidCompleteNotificationReceive(onBidCompletedNotification);
+    localNotificationManager.setOnBidCompleteNotificationClick(onBidCompletedNotificationClick);
+    super.initState();
+  }
+  onRideAcceptedNotification(ReceiveNotification notification){
+
   }
 
+  onRideAcceptedNotificationClick(String payload){
+
+  }
+
+  onRideRejectedNotification(ReceiveNotification notification){
+
+  }
+
+  onRideRejectedNotificationClick(String payload){
+
+  }
+
+  onRideDriverArrivalNotification(ReceiveNotification notification){
+
+  }
+
+  onRideDriverArrivalNotificationClick(String payload){
+
+  }
+
+  onRideCompletedNotification(ReceiveNotification notification){
+
+  }
+
+  onRideCompletedNotificationClick(String payload){
+
+  }
+
+  onBidCompletedNotification(ReceiveNotification notification){
+
+  }
+
+  onBidCompletedNotificationClick(String payload){
+
+  }
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context);
     return Scaffold(
-      backgroundColor: defaultTextColor2,
-      appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children:  [
-              // const Text("Taxinet",style: TextStyle(fontWeight: FontWeight.bold,color: primaryColor,fontSize: 20),),
-              // Consumer<LoginController>(
-              //   builder: (context,userData,child){
-              //     return CircleAvatar(
-              //       backgroundImage:
-              //       NetworkImage(userData.userProfilePic),
-              //     );
-              //   }
-              // ),
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: (){
-                  Get.defaultDialog(
-                      buttonColor: primaryColor,
-                      title: "Confirm Logout",
-                      middleText: "Are you sure you want to logout?",
-                      confirm: RawMaterialButton(
-                          shape: const StadiumBorder(),
-                          fillColor: primaryColor,
-                          onPressed: () {
-                            logoutUser();
-                            Get.back();
-                          },
-                          child: const Text(
-                            "Yes",
-                            style: TextStyle(color: Colors.white),
-                          )),
-                      cancel: RawMaterialButton(
-                          shape: const StadiumBorder(),
-                          fillColor: primaryColor,
-                          onPressed: () {
-                            Get.back();
-                          },
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.white),
-                          )));
-                },
-              )
-            ],
-          )),
-      body: appState.loading
-          ?  SizedBox(
-        height: double.infinity,
-          child: Image.asset("assets/images/102267-location-loader.gif")) : Column(
-        children: [
-          const SizedBox(
-            height: 20,
-          ),
-
-          const SizedBox(height: 10,),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: (){
-                    Get.to(()=> const RequestRide());
-                  },
-                  child: Container(
-                    alignment: Alignment.bottomLeft,
-                    decoration: BoxDecoration(
-                        image: const DecorationImage(
-                            image: AssetImage(
-                                "assets/images/86604-for-ride-share-app-car-animation.gif"),
-                            fit: BoxFit.cover),
-                        border: Border.all(),
-                        borderRadius:
-                        const BorderRadius.all(Radius.circular(12))),
-                    child: const Padding(
-                      padding: EdgeInsets.only(left: 8.0, bottom: 8),
-                      child: Text(
-                        "Request Ride",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: defaultTextColor2,
-                            fontSize: 20),
-                      ),
-                    ),
-                    height: 200,
-                    width: double.infinity,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text("📍 Your Location",style: TextStyle(fontWeight: FontWeight.bold,color: primaryColor),),
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          Expanded(
-            child: Consumer(builder: (context,mapData,child){
-              return ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: const MapView()
-              );
-            }),
-          ),
+      body: TabBarView(
+        controller: _tabController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: const [
+          RequestRide(),
+          Rides(),
+          Notifications(),
+          Profile()
         ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.access_time_sharp), label: "Rides"),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.notifications), label: "Notifications"),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+        ],
+        unselectedItemColor: Colors.white54,
+        selectedItemColor: Colors.white,
+        backgroundColor: Colors.black,
+        type: BottomNavigationBarType.fixed,
+        selectedLabelStyle: const TextStyle(fontSize: 14),
+        showSelectedLabels: true,
+        currentIndex: selectedIndex,
+        onTap: onTabClicked,
       ),
     );
   }
 }
-

@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:taxinet/passenger/home/passenger_home.dart';
 import 'package:taxinet/passenger/home/ride/request_ride.dart';
 import 'package:taxinet/views/login/loginview.dart';
-import 'driver/home/driver_home.dart';
+import 'package:taxinet/views/welcome_options.dart';
 
+import 'g_controller/login_controller.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -16,7 +18,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-
   final storage = GetStorage();
   late String username = "";
   late String token = "";
@@ -24,25 +25,23 @@ class _SplashScreenState extends State<SplashScreen> {
   bool hasToken = false;
   @override
   void initState() {
-    // TODO: implement initState
-
     super.initState();
-    if(storage.read("username") != null && storage.read("userToken") != null){
+    final loginController = MyLoginController.to;
+    if (storage.read("username") != null && storage.read("userToken") != null) {
       username = storage.read("username");
       setState(() {
         hasToken = true;
       });
-
     }
 
-    if(hasToken && storage.read("user_type") == "Driver"){
-      Timer(const Duration(seconds: 7),()=> Get.offAll(() => const DriverHome()));
-    }
-    if(hasToken && storage.read("user_type") == "Passenger"){
-      Timer(const Duration(seconds: 7),()=> Get.offAll(() => const RequestRide()));
-    }
-    if(storage.read("username") == null && storage.read("userToken") == null && storage.read("user_type") == null){
-      Timer(const Duration(seconds: 7),()=> Get.offAll(() => const LoginView()));
+    loginController.getAllPassengers();
+
+    if (hasToken && storage.read("userType") == "Passenger") {
+      Timer(const Duration(seconds: 7),
+              () => Get.offAll(() => const WelcomeOptions()));
+    } else {
+      Timer(const Duration(seconds: 7),
+              () => Get.offAll(() => const LoginView()));
     }
   }
 
@@ -73,7 +72,6 @@ class _SplashScreenState extends State<SplashScreen> {
               // boxHeight: 300.0,
             ),
           ),
-
         ],
       ),
     );
