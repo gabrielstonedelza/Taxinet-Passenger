@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -13,32 +14,60 @@ import '../../states/app_state.dart';
 class DriverOnRoute extends StatefulWidget {
   String rideId;
   String driver;
-  String pickUp;
-  String pickIpId;
-  DriverOnRoute({Key? key,required this.rideId,required this.driver,required this.pickUp,required this.pickIpId}) : super(key: key);
+  String driversLat;
+  String driversLng;
+  String passengers_pickup;
+  String pick_up_place_id;
+  DriverOnRoute({Key? key,required this.rideId,required this.driver,required this.driversLat,required this.driversLng,required this.passengers_pickup,required this.pick_up_place_id}) : super(key: key);
 
   @override
-  State<DriverOnRoute> createState() => _DriverOnRouteState(rideId:this.rideId,driver:this.driver,pickUp:this.pickUp,pickIpId:this.pickIpId);
+  State<DriverOnRoute> createState() => _DriverOnRouteState(rideId:this.rideId,driver:this.driver,driversLat:this.driversLat,driversLng:this.driversLng,passengers_pickup:this.passengers_pickup,pick_up_place_id:this.pick_up_place_id);
 }
 
 class _DriverOnRouteState extends State<DriverOnRoute> {
   String rideId;
   String driver;
-  String pickUp;
-  String pickIpId;
+  String driversLat;
+  String driversLng;
+  String passengers_pickup;
+  String pick_up_place_id;
   late Timer _timer;
 
-  _DriverOnRouteState({required this.rideId,required this.driver,required this.pickUp,required this.pickIpId});
+  _DriverOnRouteState({required this.rideId,required this.driver,required this.driversLat,required this.driversLng,required this.passengers_pickup,required this.pick_up_place_id});
   final Completer<GoogleMapController> _mapController = Completer();
   var uToken = "";
   final storage = GetStorage();
   var username = "";
   late List driversLocationDetails = [];
-  late double driversLat = 0.0;
-  late double driversLng = 0.0;
-  late String driversLocationPlaceId = "";
-  late String driversLocationName = "";
   final deMapController = DeMapController.to;
+  BitmapDescriptor sourceIcon = BitmapDescriptor.defaultMarker;
+  BitmapDescriptor destinationIcon = BitmapDescriptor.defaultMarker;
+  List<LatLng> polylineCoordinates = [];
+  void setCustomMarkerIcon()async{
+    BitmapDescriptor.fromAssetImage(ImageConfiguration.empty, "assets/images/cab_for_map.png").then((icon){
+      sourceIcon = icon;
+    });
+    BitmapDescriptor.fromAssetImage(ImageConfiguration.empty, "assets/images/location-pin_1.png",).then((icon){
+      destinationIcon = icon;
+    });
+  }
+  void getPolyPoints(double passengersLat,double passengersLng) async{
+    PolylinePoints polylinePoints = PolylinePoints();
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      "AIzaSyCVohvMiszUGO-kXyXVAPA2S7eiG890K4I",
+      PointLatLng(double.parse(driversLat), double.parse(driversLng)),
+      PointLatLng(passengersLat, passengersLng),
+    );
+
+    if(result.points.isNotEmpty){
+      for (var point in result.points) {
+        polylineCoordinates.add(
+            LatLng(point.latitude,point.longitude)
+        );
+      }
+      setState(() {});
+    }
+  }
 
 
   Future<void> getDriverLocation()async{
@@ -54,8 +83,8 @@ class _DriverOnRouteState extends State<DriverOnRoute> {
       driversLocationDetails.assignAll(results);
       for(var i in driversLocationDetails){
         setState(() {
-          driversLocationPlaceId = i['place_id'];
-          driversLocationName = i['location_name'];
+          driversLat = i['drivers_lat'];
+          driversLng = i['drivers_lng'];
         });
       }
     }
@@ -77,51 +106,71 @@ class _DriverOnRouteState extends State<DriverOnRoute> {
       centerScreen(position);
     });
     final appState = Provider.of<AppState>(context, listen: false);
-    // appState.sendRequest(pickUp);
-    appState.sendRequest(driversLocationName);
-    appState.setSelectedLocation(driversLocationPlaceId);
+    setCustomMarkerIcon();
+    getPolyPoints(appState.lat,appState.lng);
+    appState.sendDriversLocationRequest(passengers_pickup,LatLng(double.parse(driversLat), double.parse(driversLng)));
+    appState.setSelectedLocation(pick_up_place_id);
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       getDriverLocation();
     });
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      appState.sendRequest(driversLocationName);
-      appState.setSelectedLocation(driversLocationPlaceId);
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      appState.sendDriversLocationRequest(passengers_pickup,LatLng(double.parse(driversLat), double.parse(driversLng)));
+      appState.setSelectedLocation(pick_up_place_id);
     });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context);
     return Scaffold(
       body: SafeArea(
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          width: MediaQuery.of(context).size.width,
-          child: GoogleMap(
-            initialCameraPosition: CameraPosition(
-                target: appState.initialPosition, zoom: 11.5),
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapType: MapType.normal,
-            onMapCreated: (GoogleMapController controller) {
-              _mapController.complete(controller);
-              controller.setMapStyle(Utils.mapStyle);
-            },
-            myLocationEnabled: true,
-            trafficEnabled: true,
-            compassEnabled: true,
-            markers: appState.markers,
-            onCameraMove: appState.onCameraMove,
-            polylines: appState.polyLines,
-          ),
-        ),
+        child: Consumer<AppState>(builder: (context,appState,child){
+          return SizedBox(
+            height: MediaQuery.of(context).size.height,
+            width: MediaQuery.of(context).size.width,
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                  target: LatLng(double.parse(driversLat),double.parse(driversLng)), zoom: 15.5),
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapType: MapType.normal,
+              onMapCreated: (GoogleMapController controller) {
+                _mapController.complete(controller);
+                controller.setMapStyle(Utils.mapStyle);
+              },
+              myLocationEnabled: true,
+              trafficEnabled: true,
+              compassEnabled: true,
+              markers:{
+                Marker(
+                  markerId: const MarkerId("Source"),
+                  position: LatLng(double.parse(driversLat), double.parse(driversLng)),
+                  icon: sourceIcon,
+                ),
+                Marker(
+                    markerId: const MarkerId("Destination"),
+                    position: LatLng(appState.lat, appState.lng),
+                    icon: destinationIcon
+                ),
+              },
+              onCameraMove: appState.onCameraMove,
+              polylines:  {
+                Polyline(
+                    polylineId:const PolylineId("route"),
+                    points: polylineCoordinates,
+                    color: Colors.green,
+                    width: 5
+                ),
+              },
+            ),
+          );
+        },)
       ),
     );
   }
   Future<void> centerScreen(Position position)async{
     final GoogleMapController controller = await _mapController.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(driversLat,driversLng),zoom: 11.5,bearing: position.heading )));
+    controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(target: LatLng(double.parse(driversLat),double.parse(driversLng)),zoom: 15.5,bearing: position.heading )));
   }
 }
 

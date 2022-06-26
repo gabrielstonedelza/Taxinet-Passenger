@@ -12,6 +12,7 @@ import 'package:taxinet/passenger/home/search_location.dart';
 
 import '../../../constants/app_colors.dart';
 
+import '../../../g_controller/userController.dart';
 import '../../../states/app_state.dart';
 import '../../../views/login/loginview.dart';
 import 'package:http/http.dart' as http;
@@ -44,6 +45,7 @@ class _RequestRideState extends State<RequestRide> {
   bool isRead = true;
   late String passengerPickUp = "";
   late String passengerPickUpPlaceId = "";
+  final uController = Get.put(UserController());
 
   String driver = "";
 
@@ -85,33 +87,34 @@ class _RequestRideState extends State<RequestRide> {
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context);
 
     return Scaffold(
       body: SafeArea(
-        child: ListView(
+        child: uController.referral != "" ? ListView(
           children: [
-            SizedBox(
-              height: MediaQuery.of(context).size.height / 1.8,
-              width: MediaQuery.of(context).size.width,
-              child: GoogleMap(
-                initialCameraPosition: CameraPosition(
-                    target: LatLng(appState.lat,appState.lng), zoom: 14.0),
-                myLocationButtonEnabled: false,
-                zoomControlsEnabled: false,
-                mapType: MapType.normal,
-                onMapCreated: (GoogleMapController controller) {
-                  _mapController.complete(controller);
-                  controller.setMapStyle(Utils.mapStyle);
-                },
-                myLocationEnabled: true,
-                trafficEnabled: true,
-                compassEnabled: true,
-                markers: appState.markers,
-                onCameraMove: appState.onCameraMove,
-                polylines: appState.polyLines,
-              ),
-            ),
+            Consumer<AppState>(builder: (context,appState,child){
+              return SizedBox(
+                height: MediaQuery.of(context).size.height / 1.8,
+                width: MediaQuery.of(context).size.width,
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                      target: LatLng(appState.lat,appState.lng), zoom: 14.0),
+                  myLocationButtonEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapType: MapType.normal,
+                  onMapCreated: (GoogleMapController controller) {
+                    _mapController.complete(controller);
+                    controller.setMapStyle(Utils.mapStyle);
+                  },
+                  myLocationEnabled: true,
+                  trafficEnabled: true,
+                  compassEnabled: true,
+                  markers: appState.markers,
+                  onCameraMove: appState.onCameraMove,
+                  polylines: appState.polyLines,
+                ),
+              );
+            },),
             Card(
               elevation: 5,
               shape: const RoundedRectangleBorder(
@@ -150,55 +153,63 @@ class _RequestRideState extends State<RequestRide> {
                     const SizedBox(
                       height: 10,
                     ),
-                     Container(
-                            decoration: const BoxDecoration(),
-                            height: 300,
-                            child: ListView.builder(
-                                itemCount: appState.searchedDestinations != null
-                                    ? appState.searchedDestinations.length
-                                    : 0,
-                                itemBuilder: (context, index) {
-                                  items = appState.searchedDestinations[index];
-                                  return ListTile(
-                                    title: Row(
-                                      children: [
-                                        const Icon(
-                                          Icons.location_on_outlined,
-                                          color: Colors.black87,
-                                        ),
-                                        const SizedBox(
-                                          width: 10,
-                                        ),
-                                        Expanded(
-                                          child: RichText(
-                                            text: TextSpan(
-                                              text: items['searched_destination'],
-                                              style: DefaultTextStyle.of(context).style,
-                                            ),
-                                          ),
-                                        ),
+                     Consumer<AppState>(builder: (context,appState,child){
+                       return Container(
+                         decoration: const BoxDecoration(),
+                         height: 300,
+                         child: ListView.builder(
+                             itemCount: appState.searchedDestinations != null
+                                 ? appState.searchedDestinations.length
+                                 : 0,
+                             itemBuilder: (context, index) {
+                               items = appState.searchedDestinations[index];
+                               return ListTile(
+                                 title: Row(
+                                   children: [
+                                     const Icon(
+                                       Icons.location_on_outlined,
+                                       color: Colors.black87,
+                                     ),
+                                     const SizedBox(
+                                       width: 10,
+                                     ),
+                                     Expanded(
+                                       child: RichText(
+                                         text: TextSpan(
+                                           text: items['searched_destination'],
+                                           style: DefaultTextStyle.of(context).style,
+                                         ),
+                                       ),
+                                     ),
 
-                                      ],
-                                    ),
-                                    subtitle: const Divider(),
-                                    onTap: () {
-                                      appState.searchDestination =
-                                          appState.searchedDestinations[index]
-                                              ['searched_destination'];
-                                      appState.searchPlaceId =
-                                          appState.searchedDestinations[index]
-                                              ['place_id'];
-                                      appState.hasDestination = hasLocation;
-                                      Get.to(() => const AfterSearch());
-                                    },
-                                  );
-                                }),
-                          ),
+                                   ],
+                                 ),
+                                 subtitle: const Divider(),
+                                 onTap: () {
+
+                                   appState.searchDestination =
+                                   appState.searchedDestinations[index]
+                                   ['searched_destination'];
+                                   appState.searchPlaceId =
+                                   appState.searchedDestinations[index]
+                                   ['place_id'];
+                                   appState.hasDestination = hasLocation;
+                                   Get.to(() => AfterSearch(drop_off_lat:items['drop_off_lat'],drop_off_lng:items['drop_off_lng']));
+                                 },
+                               );
+                             }),
+                       );
+                     },),
                   ],
                 ),
               ),
             )
           ],
+        ) : const Center(
+          child: Padding(
+            padding: EdgeInsets.only(left: 8.0),
+            child: Text("Sorry 😢,you need to verify your account in your profile by providing a valid referral from Taxinet."),
+          ),
         ),
       ),
     );

@@ -44,7 +44,6 @@ class _BiddingPageState extends State<BiddingPage> {
   String phoneNumber = "";
   late List driverDetails = [];
 
-
   Future<void> callDriver(String url)async{
     if(await canLaunch(url)){
       await launch(url);
@@ -107,7 +106,6 @@ class _BiddingPageState extends State<BiddingPage> {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
       driverDetails = json.decode(jsonData);
-      print(response.body);
       for (var i in driverDetails) {
         setState(() {
           phoneNumber = i['phone_number'];
@@ -143,7 +141,6 @@ class _BiddingPageState extends State<BiddingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: primaryColor,
@@ -208,54 +205,55 @@ class _BiddingPageState extends State<BiddingPage> {
               ),
             ),
           ),
-          Column(
-            children: [
-              SizedBox(
-                height: 500,
-                child:  ListView.builder(
-                    itemCount: appState.allBids != null
-                        ? appState.allBids.length
-                        : 0,
-                    itemBuilder: (context, index) {
-                      items = appState.allBids[index];
+          Consumer<AppState>(builder: (context,appState,child){
+            return Column(
+              children: [
+                SizedBox(
+                  height: 500,
+                  child:  ListView.builder(
+                      itemCount: appState.allBids != null
+                          ? appState.allBids.length
+                          : 0,
+                      itemBuilder: (context, index) {
+                        items = appState.allBids[index];
 
-                      return Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Card(
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: ListTile(
-                                  title: Row(
-                                    children: [
-                                      Expanded(
-                                          child: Text(
-                                              "${items['username']}'s bid")),
-                                      Expanded(
-                                        child: items['bid_message'] != null
-                                            ? Text("GHS ${items['bid_message']}")
-                                            : const Text(""),
-                                      ),
-                                    ],
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Card(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: ListTile(
+                                    title: Row(
+                                      children: [
+                                        Expanded(
+                                            child: Text(
+                                                "${items['username']}'s bid")),
+                                        Expanded(
+                                          child: items['bid_message'] != null
+                                              ? Text("GHS ${items['bid_message']}")
+                                              : const Text(""),
+                                        ),
+                                      ],
+                                    ),
+                                    subtitle: Padding(
+                                        padding:
+                                        const EdgeInsets.only(top: 8.0),
+                                        child: Text(
+                                          items['bid'],
+                                          style: const TextStyle(
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold),
+                                        )),
                                   ),
-                                  subtitle: Padding(
-                                      padding:
-                                      const EdgeInsets.only(top: 8.0),
-                                      child: Text(
-                                        items['bid'],
-                                        style: const TextStyle(
-                                            color: Colors.red,
-                                            fontWeight: FontWeight.bold),
-                                      )),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    }),
-              ),
-              IconButton(
+                        );
+                      }),
+                ),
+                IconButton(
                   onPressed: (){
                     showMaterialModalBottomSheet(
                       context: context,
@@ -310,10 +308,12 @@ class _BiddingPageState extends State<BiddingPage> {
                     );
                   },
                   icon: const Icon(Icons.info,size: 50,color: Colors.amber,),
-              )
-              ,
-            ],
-          ),
+                )
+                ,
+              ],
+            );
+          },),
+
         ],
       ),
       floatingActionButton: FloatingActionButton(

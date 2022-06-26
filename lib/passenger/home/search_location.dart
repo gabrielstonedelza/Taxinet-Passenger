@@ -155,6 +155,7 @@ class _SearchLocationState extends State<SearchLocation> {
               ),
             ),
             const SizedBox(height: 20,),
+
            !isSearching ? SizedBox(
               height: 400,
               child: ListView.builder(
@@ -181,7 +182,7 @@ class _SearchLocationState extends State<SearchLocation> {
                         appState.searchDestination = appState.searchedDestinations[index]['searched_destination'];
                         appState.searchPlaceId = appState.searchedDestinations[index]['place_id'];
                         appState.hasDestination = hasLocation;
-                        Get.to(() => const AfterSearch());
+                        Get.to(() => AfterSearch(drop_off_lat: appState.passDLat, drop_off_lng: appState.passDLng,));
                       },
                     );
                   }),
@@ -223,7 +224,7 @@ class _SearchLocationState extends State<SearchLocation> {
                           appState.searchPlaceId = appState.searchResults[index].placeId;
                           appState.hasDestination = hasLocation;
                           appState.addToSearchedLocations(uToken,appState.searchResults[index].description,appState.searchResults[index].placeId);
-                          Get.to(() => const AfterSearch());
+                          Get.to(() => AfterSearch(drop_off_lat: appState.passDLat, drop_off_lng: appState.passDLng));
                         },
                       );
                     }),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geocoding/geocoding.dart';
@@ -9,6 +10,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 
 import 'package:taxinet/models/places_search.dart';
+import 'package:taxinet/passenger/home/ride/after_search.dart';
 
 import '../constants/app_colors.dart';
 import '../models/place.dart';
@@ -16,17 +18,24 @@ import '../models/place.dart';
 late double userLatitude = 0.0;
 late double userLongitude = 0.0;
 late StreamSubscription<Position> streamSubscription;
+late String myLocationName = "";
+late String dPlaceId = "";
+TextEditingController locationController = TextEditingController();
 
 class DeMapController extends GetxController {
-  String myLocationName = "";
   bool isLoading = true;
   static DeMapController get to => Get.find<DeMapController>();
+  String apiKey = "AIzaSyCVohvMiszUGO-kXyXVAPA2S7eiG890K4I";
+  late Timer _timer;
 
   @override
   void onInit() {
     // TODO: implement onInit
     super.onInit();
     getUserLocation();
+    // _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+    //   getCurrentLocation();
+    // });
   }
 
   Future<Object> getUserLocation() async {
@@ -53,18 +62,60 @@ class DeMapController extends GetxController {
     return getCurrentLocation();
   }
 
-  Stream<Position> getCurrentLocation(){
-    const LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10,
-    );
-    streamSubscription = Geolocator.getPositionStream().listen((Position position) {
+  Stream<Position> getCurrentLocation() {
+    late LocationSettings locationSettings;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      locationSettings = AndroidSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+          forceLocationManager: true,
+          intervalDuration: const Duration(seconds: 10),
+          //(Optional) Set foreground notification config to keep the app alive
+          //when going to the background
+          foregroundNotificationConfig: const ForegroundNotificationConfig(
+            notificationText:
+                "Taxinet will still continue to receive your location even in the background",
+            notificationTitle: "Running in Background",
+            enableWakeLock: true,
+          ));
+    } else {
+      locationSettings = const LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+      );
+    }
+    streamSubscription =
+        Geolocator.getPositionStream().listen((Position position) {
       userLatitude = position.latitude;
       userLongitude = position.longitude;
     });
-    return Geolocator.getPositionStream(
-        locationSettings: locationSettings
-    );
+    userLocation();
+    return Geolocator.getPositionStream(locationSettings: locationSettings);
+  }
+
+  Future<void> userLocation() async {
+    try {
+      isLoading = true;
+      if(userLatitude != 0.0 && userLongitude != 0.0){
+        List<Placemark> placemark =
+        await placemarkFromCoordinates(userLatitude, userLongitude);
+        // _initialPosition = LatLng(userLatitude, userLongitude);
+        myLocationName = placemark[2].street!;
+        locationController.text = myLocationName;
+        var url = Uri.parse(
+            "https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=$myLocationName&inputtype=textquery&key=$apiKey");
+        http.Response response = await http.get(url);
+
+        if (response.statusCode == 200) {
+          var values = jsonDecode(response.body);
+          dPlaceId = values['candidates'][0]['place_id'];
+          // print(values['candidates'][0]['place_id']);
+        }
+      }
+
+    } finally {
+      isLoading = false;
+    }
   }
 
   @override
@@ -76,10 +127,8 @@ class DeMapController extends GetxController {
 }
 
 class AppState with ChangeNotifier {
-  String apiKey = "AIzaSyCNrE7Zbx75Y63T5PcPuio7-yIYDgMPSc8";
+  String apiKey = "AIzaSyCVohvMiszUGO-kXyXVAPA2S7eiG890K4I";
   final String baseUrl = "https://maps.googleapis.com/maps/api/directions/json";
-  final String distanceApi =
-      "https://maps.googleapis.com/maps/api/distancematrix/json?destinations=Adum&origins=Buokrom&units=imperial&key=AIzaSyCNrE7Zbx75Y63T5PcPuio7-yIYDgMPSc8";
   late double lat = userLatitude;
   late double lng = userLongitude;
   String dePassengersLat = userLatitude.toString();
@@ -103,7 +152,7 @@ class AppState with ChangeNotifier {
   String searchDestination = "";
   String searchPlaceId = "";
   bool hasDestination = false;
-  String myLocationName = "";
+  // String myLocationName = "";
   String get getMyLocationName => myLocationName;
   late List driversLocationMinutes = [];
   List get allDriversLocationMinutes => driversLocationMinutes;
@@ -141,7 +190,7 @@ class AppState with ChangeNotifier {
   static LatLng? _lat;
   static LatLng? _lng;
   static LatLng? _dLocation;
-  late String dPlaceId = "";
+  // late String dPlaceId = "";
   String get driversPlaceId => dPlaceId;
 
   //getters for detail ride
@@ -157,6 +206,10 @@ class AppState with ChangeNotifier {
   LatLng? get latlngDriver => _dLocation;
   bool isSuccess = false;
   bool get wasSuccess => isSuccess;
+  late String passengersDropOffLat = "";
+  late String passengersDropOffLng = "";
+  String get passDLat => passengersDropOffLat;
+  String get passDLng => passengersDropOffLng;
 
   // notifications
   late List triggeredNotifications = [];
@@ -169,11 +222,10 @@ class AppState with ChangeNotifier {
   List get yourNots => yourNotifications;
   List get allYourNots => allNotifications;
 
-  AppState() {
-    _getUserLocation();
-  }
+  AppState();
 
-  Future<String> getRouteCoordinates(LatLng startLatLng, LatLng endLatLng) async {
+  Future<String> getRouteCoordinates(
+      LatLng startLatLng, LatLng endLatLng) async {
     var uri = Uri.parse(
         "$baseUrl?origin=${startLatLng.latitude},${startLatLng.longitude}&destination=${endLatLng.latitude},${endLatLng.longitude}&key=$apiKey");
 
@@ -189,63 +241,11 @@ class AppState with ChangeNotifier {
     return points;
   }
 
-  Future<void> _getUserLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
-    }
-
-    return await userLocation();
-  }
-
-  Future<void> userLocation() async {
-    try {
-      isLoading = true;
-      List<Placemark> placemark =
-          await placemarkFromCoordinates(userLatitude, userLongitude);
-      // _initialPosition = LatLng(userLatitude, userLongitude);
-      myLocationName = placemark[2].street!;
-      locationController.text = myLocationName;
-      var url = Uri.parse(
-          "https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=$myLocationName&inputtype=textquery&key=$apiKey");
-      http.Response response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        var values = jsonDecode(response.body);
-        dPlaceId = values['candidates'][0]['place_id'];
-        // print(values['candidates'][0]['place_id']);
-      }
-    } catch (e) {
-      Get.snackbar("Sorry 😢", "Your location couldn't be found",
-          colorText: defaultTextColor1,
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: primaryColor);
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
   void createRoute(String encodedPolyline) {
     _polyLines.add(Polyline(
         polylineId: PolylineId(_lastPosition.toString()),
-        width: 5,
-        color: Colors.black,
+        width: 3,
+        color: Colors.white,
         points: _convertToLatLng(_decodePoly(encodedPolyline))));
     notifyListeners();
   }
@@ -310,13 +310,16 @@ class AppState with ChangeNotifier {
     notifyListeners();
   }
 
-  void addMarkerToDriverRoute(LatLng location, String address,LatLng driversPosition) {
-    _markers.add(Marker(
-      markerId: MarkerId(driversPosition.toString()),
-      position: location,
-      infoWindow: InfoWindow(title: address, snippet: "Go Here"),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueMagenta),
-    ));
+  //set for drivers location
+  void sendDriversLocationRequest(
+      String intendedDestination, LatLng driversLatLng) async {
+    List<Location> locations = await locationFromAddress(intendedDestination);
+    double latitude = locations[0].latitude;
+    double longitude = locations[0].longitude;
+    LatLng destination = LatLng(latitude, longitude);
+    // addMarker(destination, intendedDestination);
+    String route = await getRouteCoordinates(driversLatLng, destination);
+    // createRoute(route);
     notifyListeners();
   }
 
@@ -345,6 +348,10 @@ class AppState with ChangeNotifier {
     http.Response response = await http.get(Uri.parse(url));
     var json = jsonDecode(response.body);
     var jsonResult = json['result'] as Map<String, dynamic>;
+    passengersDropOffLat = jsonResult['geometry']['location']['lat'].toString();
+    passengersDropOffLng = jsonResult['geometry']['location']['lng'].toString();
+    // print(passengersDropOffLat);
+    // print(passengersDropOffLng);
     return Places.fromJson(jsonResult);
   }
 
@@ -366,7 +373,9 @@ class AppState with ChangeNotifier {
     notifyListeners();
     super.dispose();
   }
+
   late String fetchingDriversMsg = "";
+  late String onlineDriver = "";
 
   Future<void> getDriversUpdatedLocations(String uToken) async {
     try {
@@ -385,19 +394,14 @@ class AppState with ChangeNotifier {
               "https://maps.googleapis.com/maps/api/distancematrix/json?destinations=place_id:${i['place_id']}|&origins=$myLocationName&key=$apiKey");
           http.Response res = await http.get(destinationAddress);
           if (res.statusCode == 200) {
-            var jsonResponse = jsonDecode(res.body);
-            driversLocationMinutes.add(
-                jsonResponse['rows'][0]['elements'][0]['duration']['text']);
-          } else {}
+            var jsonResponse = await jsonDecode(res.body);
+            onlineDriver = await jsonResponse['rows'][0]['elements'][0]['duration']['text'];
+          } else {
+
+          }
         }
         notifyListeners();
       }
-    } catch (e) {
-      // Get.snackbar("Sorry",
-      //     "something happened or please check your internet connection",
-      //     snackPosition: SnackPosition.BOTTOM,
-      //     backgroundColor: Colors.red,
-      //     colorText: defaultTextColor1);
     } finally {
       isLoading = false;
     }
@@ -433,25 +437,6 @@ class AppState with ChangeNotifier {
     }
   }
 
-  updateDrivesLocation(LatLng lat, LatLng lng, String token, int driver) async {
-    final addLocationUrl =
-        "https://taxinetghana.xyz/drivers_location/update/$driver";
-    final myLink = Uri.parse(addLocationUrl);
-    http.Response response = await http.post(myLink, headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "Authorization": "Token $token"
-    }, body: {
-      "loc_lat": lat,
-      "loc_lng": lng,
-    });
-    if (response.statusCode == 200) {
-      Get.snackbar("Hurray,🙂", "You are live");
-    } else {
-      Get.snackbar("Sorry 🥲",
-          "your location could not be updated,please logout and login again");
-    }
-  }
-
   Future<void> getPassengersSearchedDestinations(String uToken) async {
     try {
       isLoading = true;
@@ -476,7 +461,8 @@ class AppState with ChangeNotifier {
     }
   }
 
-  addToSearchedLocations(String token, String destination, String placeId) async {
+  addToSearchedLocations(
+      String token, String destination, String placeId) async {
     const addLocationUrl = "https://taxinetghana.xyz/destination/new/";
     final myLink = Uri.parse(addLocationUrl);
     http.Response response = await http.post(myLink, headers: {
@@ -485,29 +471,31 @@ class AppState with ChangeNotifier {
     }, body: {
       "searched_destination": destination,
       "place_id": placeId,
+      "drop_off_lat": passengersDropOffLng,
+      "drop_off_lng": passengersDropOffLat,
     });
     if (response.statusCode == 201) {
+      // print("This is printing from sending location $passengersDropOffLng");
+      // print("This is printing from sending location $passengersDropOffLat");
       //
     } else {
-      Get.snackbar("Oh no!,😔", "You are offline",
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          duration: const Duration(seconds: 5),
-          backgroundColor: Colors.red);
+      print(response.body);
+      // Get.snackbar("Oh no!,😔", "You are offline",
+      //     colorText: Colors.white,
+      //     snackPosition: SnackPosition.TOP,
+      //     duration: const Duration(seconds: 5),
+      //     backgroundColor: Colors.red);
     }
   }
 
   requestRide(
-      String token,
-      int driver,
-      String passenger,
-      String pickUp,
-      String dropOff,
-      String passengerPickUpPId,
-      String passengerDropOffId,
-      String rideDuration,
-      String rideDistance
-      ) async {
+    String token,
+    int driver,
+    String dropOff,
+    String passengerDropOffId,
+      String dropOffLat,
+      String dropOffLng,
+  ) async {
     const addLocationUrl = "https://taxinetghana.xyz/request_ride/new/";
     final myLink = Uri.parse(addLocationUrl);
     http.Response response = await http.post(myLink, headers: {
@@ -515,43 +503,28 @@ class AppState with ChangeNotifier {
       "Authorization": "Token $token"
     }, body: {
       "driver": driver.toString(),
-      "passenger": passenger.toString(),
-      "pick_up": pickUp,
+      "pick_up": myLocationName,
       "drop_off": dropOff,
-      "passengers_pick_up_place_id": passengerPickUpPId,
-      "passengers_drop_off_place_id": passengerDropOffId,
       "passengers_lat": userLatitude.toString(),
       "passengers_lng": userLongitude.toString(),
-      "ride_duration": rideDuration,
-      "ride_distance": rideDistance,
+      "passengers_pick_up_place_id": dPlaceId,
+      "passengers_drop_off_place_id": passengerDropOffId,
+      "drop_off_lat": dropOffLat,
+      "drop_off_lng": dropOffLng,
     });
     if (response.statusCode == 201) {
       isSuccess = true;
-      Get.snackbar(
-        "Hurray,🙂",
-        "You request is sent to driver,please wait him to accept",
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-        duration: const Duration(seconds: 10),
-        backgroundColor: snackColor,
-      );
     } else {
       isSuccess = false;
-      Get.snackbar("Sorry,😢", response.body.toString(),
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          duration: const Duration(seconds: 5),
-          backgroundColor: snackColor);
     }
   }
 
   Future<void> getAllTriggeredNotifications(String token) async {
     const url = "https://taxinetghana.xyz/user_triggerd_notifications";
     var myLink = Uri.parse(url);
-    final response = await http.get(myLink, headers: {
-      "Authorization": "Token $uToken"
-    });
-    if(response.statusCode == 200){
+    final response =
+        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    if (response.statusCode == 200) {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
       triggeredNotifications = json.decode(jsonData);
@@ -563,10 +536,9 @@ class AppState with ChangeNotifier {
   Future<void> getAllUnReadNotifications(String token) async {
     const url = "https://taxinetghana.xyz/user_notifications";
     var myLink = Uri.parse(url);
-    final response = await http.get(myLink, headers: {
-      "Authorization": "Token $uToken"
-    });
-    if(response.statusCode == 200){
+    final response =
+        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    if (response.statusCode == 200) {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
       yourNotifications = json.decode(jsonData);
@@ -578,10 +550,9 @@ class AppState with ChangeNotifier {
   Future<void> getAllNotifications(String token) async {
     const url = "https://taxinetghana.xyz/notifications";
     var myLink = Uri.parse(url);
-    final response = await http.get(myLink, headers: {
-      "Authorization": "Token $uToken"
-    });
-    if(response.statusCode == 200){
+    final response =
+        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    if (response.statusCode == 200) {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
       allNotifications = json.decode(jsonData);
@@ -590,23 +561,22 @@ class AppState with ChangeNotifier {
     }
   }
 
-  unTriggerNotifications(int id)async{
+  unTriggerNotifications(int id) async {
     final requestUrl = "https://fnetghana.xyz/read_notification/$id/";
     final myLink = Uri.parse(requestUrl);
     final response = await http.put(myLink, headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       'Accept': 'application/json',
       "Authorization": "Token $uToken"
-    },body: {
+    }, body: {
       "notification_trigger": "Not Triggered",
     });
-    if(response.statusCode == 200){
-
-    }
+    if (response.statusCode == 200) {}
   }
+
   late List allBids = [];
 
-  Future<void> getBids(String rideId,String token)async {
+  Future<void> getBids(String rideId, String token) async {
     try {
       isLoading = true;
       final completedRides = "https://taxinetghana.xyz/all_bids/$rideId/";
@@ -620,11 +590,9 @@ class AppState with ChangeNotifier {
         allBids.assignAll(jsonData);
         notifyListeners();
       }
-    }
-    catch(e){}
-    finally{
+    } catch (e) {
+    } finally {
       isLoading = false;
     }
   }
-
 }

@@ -23,7 +23,8 @@ class PassengerHome extends StatefulWidget {
   State<PassengerHome> createState() => _PassengerHomeState();
 }
 
-class _PassengerHomeState extends State<PassengerHome> with SingleTickerProviderStateMixin{
+class _PassengerHomeState extends State<PassengerHome>
+    with SingleTickerProviderStateMixin {
   TabController? _tabController;
   int selectedIndex = 0;
 
@@ -33,6 +34,7 @@ class _PassengerHomeState extends State<PassengerHome> with SingleTickerProvider
       _tabController!.index = selectedIndex;
     });
   }
+
   final Completer<GoogleMapController> _mapController = Completer();
   late FocusNode destinationFocus;
   bool hasLocation = false;
@@ -55,13 +57,39 @@ class _PassengerHomeState extends State<PassengerHome> with SingleTickerProvider
 
   String driver = "";
 
+  late List driversLocationDetails = [];
+  late String driversLat = "";
+  late String driversLng = "";
+  late String passengersPickUP = "";
+  late String passengersPickUpId = "";
+
+  Future<void> getDriverLocation() async {
+    final url = "https://taxinetghana.xyz/get_driver_location/$driver";
+    var myLink = Uri.parse(url);
+    final response =
+        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    if (response.statusCode == 200) {
+      final codeUnits = response.body.codeUnits;
+      var jsonData = const Utf8Decoder().convert(codeUnits);
+      var results = json.decode(jsonData);
+      driversLocationDetails.assignAll(results);
+      for (var i in driversLocationDetails) {
+        setState(() {
+          driversLat = i['drivers_lat'];
+          driversLng = i['drivers_lng'];
+        });
+      }
+    } else {
+
+    }
+  }
+
   Future<void> getAllTriggeredNotifications(String token) async {
     const url = "https://taxinetghana.xyz/user_triggerd_notifications/";
     var myLink = Uri.parse(url);
-    final response = await http.get(myLink, headers: {
-      "Authorization": "Token $uToken"
-    });
-    if(response.statusCode == 200){
+    final response =
+        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    if (response.statusCode == 200) {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
       triggeredNotifications = json.decode(jsonData);
@@ -72,26 +100,22 @@ class _PassengerHomeState extends State<PassengerHome> with SingleTickerProvider
   Future<void> getAllUnReadNotifications(String token) async {
     const url = "https://taxinetghana.xyz/user_notifications/";
     var myLink = Uri.parse(url);
-    final response = await http.get(myLink, headers: {
-      "Authorization": "Token $uToken"
-    });
-    if(response.statusCode == 200){
-
+    final response =
+        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    if (response.statusCode == 200) {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
       yourNotifications = json.decode(jsonData);
       notRead.assignAll(yourNotifications);
-
     }
   }
 
   Future<void> getAllNotifications(String token) async {
     const url = "https://taxinetghana.xyz/notifications/";
     var myLink = Uri.parse(url);
-    final response = await http.get(myLink, headers: {
-      "Authorization": "Token $uToken"
-    });
-    if(response.statusCode == 200){
+    final response =
+        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    if (response.statusCode == 200) {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
       allNotifications = json.decode(jsonData);
@@ -103,34 +127,32 @@ class _PassengerHomeState extends State<PassengerHome> with SingleTickerProvider
     });
   }
 
-  unTriggerNotifications(int id)async{
+  unTriggerNotifications(int id) async {
     final requestUrl = "https://taxinetghana.xyz/user_read_notifications/$id/";
     final myLink = Uri.parse(requestUrl);
     final response = await http.put(myLink, headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       'Accept': 'application/json',
       "Authorization": "Token $uToken"
-    },body: {
+    }, body: {
       "notification_trigger": "Not Triggered",
     });
-    if(response.statusCode == 200){
-
-    }
+    if (response.statusCode == 200) {}
   }
-  updateReadNotification(int id)async{
+
+  updateReadNotification(int id) async {
     final requestUrl = "https://taxinetghana.xyz/user_read_notifications/$id/";
     final myLink = Uri.parse(requestUrl);
     final response = await http.put(myLink, headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       'Accept': 'application/json',
       "Authorization": "Token $uToken"
-    },body: {
+    }, body: {
       "read": "Read",
     });
-    if(response.statusCode == 200){
-
-    }
+    if (response.statusCode == 200) {}
   }
+
   Future<void> fetchRideDetail(String rideId) async {
     final detailRideUrl = "https://taxinetghana.xyz/ride_requests/$rideId";
     final myLink = Uri.parse(detailRideUrl);
@@ -143,11 +165,9 @@ class _PassengerHomeState extends State<PassengerHome> with SingleTickerProvider
       var jsonData = jsonDecode(codeUnits);
       passengerPickUp = jsonData['pick_up'];
       passengerPickUpPlaceId = jsonData['passengers_pick_up_place_id'];
-
     } else {
       Get.snackbar("Sorry", "please check your internet connection");
     }
-
   }
 
   @override
@@ -161,6 +181,7 @@ class _PassengerHomeState extends State<PassengerHome> with SingleTickerProvider
     }
 
     appState.getPassengersSearchedDestinations(uToken);
+    appState.getDriversUpdatedLocations(uToken);
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       appState.getPassengersSearchedDestinations(uToken);
     });
@@ -168,85 +189,92 @@ class _PassengerHomeState extends State<PassengerHome> with SingleTickerProvider
     _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       getAllTriggeredNotifications(uToken);
       getAllUnReadNotifications(uToken);
-      for(var i in triggered){
-        localNotificationManager.showAcceptedRideNotification(i['notification_title'],i['notification_message']);
-        localNotificationManager.showRejectedRideNotification(i['notification_title'],i['notification_message']);
-        localNotificationManager.showDriverArrivalNotification(i['notification_title'],i['notification_message']);
-        localNotificationManager.showCompletedRideNotification(i['notification_title'],i['notification_message']);
-        localNotificationManager.showBidCompleteNotification(i['notification_title'],i['notification_message']);
+      for (var i in triggered) {
+        localNotificationManager.showAcceptedRideNotification(
+            i['notification_title'], i['notification_message']);
+        localNotificationManager.showRejectedRideNotification(
+            i['notification_title'], i['notification_message']);
+        localNotificationManager.showDriverArrivalNotification(
+            i['notification_title'], i['notification_message']);
+        localNotificationManager.showCompletedRideNotification(
+            i['notification_title'], i['notification_message']);
+        localNotificationManager.showBidCompleteNotification(
+            i['notification_title'], i['notification_message']);
       }
-      for(var i in notRead){
-        if(i['notification_title'] == "Ride was accepted" && i['read'] == "Not Read"){
-          Get.to(()=> BiddingPage(rideId:i['ride_id'],driver:i['notification_from'].toString()));
+      for (var i in notRead) {
+        if (i['notification_title'] == "Ride was accepted" &&
+            i['read'] == "Not Read") {
+          passengersPickUP = i['passengers_lat'];
+          passengersPickUpId = i['passengers_lng'];
+          Get.to(() => BiddingPage(
+              rideId: i['ride_id'], driver: i['notification_from'].toString()));
           updateReadNotification(i['id']);
           setState(() {
             driver = i['notification_from'].toString();
           });
           fetchRideDetail(i['ride_id']);
         }
-        if(i['notification_title'] == "Bidding Accepted" && i['read'] == "Not Read"){
-          Get.to(()=> DriverOnRoute(rideId:i['ride_id'],driver:i['notification_from'].toString(),pickUp:passengerPickUp,pickIpId:passengerPickUpPlaceId));
+        if (i['notification_title'] == "Bidding Accepted" &&
+            i['read'] == "Not Read") {
+          Get.to(() => DriverOnRoute(
+              rideId: i['ride_id'],
+              driver: i['notification_from'].toString(),
+              driversLat: i['drivers_lat'],
+              driversLng: i['drivers_lng'],
+              passengers_pickup: i['passengers_pickup'],
+              pick_up_place_id: i['pick_up_place_id']));
           updateReadNotification(i['id']);
         }
       }
     });
 
     _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      for(var e in triggered){
+      for (var e in triggered) {
         unTriggerNotifications(e["id"]);
       }
     });
-    localNotificationManager.setOnAcceptedRideNotificationReceive(onRideAcceptedNotification);
-    localNotificationManager.setOnAcceptedRideNotificationClick(onRideAcceptedNotificationClick);
-    localNotificationManager.setOnRejectedRideNotificationReceive(onRideRejectedNotification);
-    localNotificationManager.setOnRejectedRideNotificationClick(onRideRejectedNotificationClick);
-    localNotificationManager.setOnDriverArrivalNotificationReceive(onRideDriverArrivalNotification);
-    localNotificationManager.setOnDriverArrivalNotificationClick(onRideDriverArrivalNotificationClick);
-    localNotificationManager.setOnCompletedRideNotificationReceive(onRideCompletedNotification);
-    localNotificationManager.setOnCompletedRideNotificationClick(onRideCompletedNotificationClick);
-    localNotificationManager.setOnBidCompleteNotificationReceive(onBidCompletedNotification);
-    localNotificationManager.setOnBidCompleteNotificationClick(onBidCompletedNotificationClick);
+    localNotificationManager
+        .setOnAcceptedRideNotificationReceive(onRideAcceptedNotification);
+    localNotificationManager
+        .setOnAcceptedRideNotificationClick(onRideAcceptedNotificationClick);
+    localNotificationManager
+        .setOnRejectedRideNotificationReceive(onRideRejectedNotification);
+    localNotificationManager
+        .setOnRejectedRideNotificationClick(onRideRejectedNotificationClick);
+    localNotificationManager
+        .setOnDriverArrivalNotificationReceive(onRideDriverArrivalNotification);
+    localNotificationManager.setOnDriverArrivalNotificationClick(
+        onRideDriverArrivalNotificationClick);
+    localNotificationManager
+        .setOnCompletedRideNotificationReceive(onRideCompletedNotification);
+    localNotificationManager
+        .setOnCompletedRideNotificationClick(onRideCompletedNotificationClick);
+    localNotificationManager
+        .setOnBidCompleteNotificationReceive(onBidCompletedNotification);
+    localNotificationManager
+        .setOnBidCompleteNotificationClick(onBidCompletedNotificationClick);
     super.initState();
   }
-  onRideAcceptedNotification(ReceiveNotification notification){
 
-  }
+  onRideAcceptedNotification(ReceiveNotification notification) {}
 
-  onRideAcceptedNotificationClick(String payload){
+  onRideAcceptedNotificationClick(String payload) {}
 
-  }
+  onRideRejectedNotification(ReceiveNotification notification) {}
 
-  onRideRejectedNotification(ReceiveNotification notification){
+  onRideRejectedNotificationClick(String payload) {}
 
-  }
+  onRideDriverArrivalNotification(ReceiveNotification notification) {}
 
-  onRideRejectedNotificationClick(String payload){
+  onRideDriverArrivalNotificationClick(String payload) {}
 
-  }
+  onRideCompletedNotification(ReceiveNotification notification) {}
 
-  onRideDriverArrivalNotification(ReceiveNotification notification){
+  onRideCompletedNotificationClick(String payload) {}
 
-  }
+  onBidCompletedNotification(ReceiveNotification notification) {}
 
-  onRideDriverArrivalNotificationClick(String payload){
-
-  }
-
-  onRideCompletedNotification(ReceiveNotification notification){
-
-  }
-
-  onRideCompletedNotificationClick(String payload){
-
-  }
-
-  onBidCompletedNotification(ReceiveNotification notification){
-
-  }
-
-  onBidCompletedNotificationClick(String payload){
-
-  }
+  onBidCompletedNotificationClick(String payload) {}
 
   @override
   Widget build(BuildContext context) {
@@ -254,12 +282,7 @@ class _PassengerHomeState extends State<PassengerHome> with SingleTickerProvider
       body: TabBarView(
         controller: _tabController,
         physics: const NeverScrollableScrollPhysics(),
-        children: const [
-          RequestRide(),
-          Rides(),
-          Notifications(),
-          Profile()
-        ],
+        children: const [RequestRide(), Rides(), Notifications(), Profile()],
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const [

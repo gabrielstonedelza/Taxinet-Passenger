@@ -5,10 +5,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:taxinet/passenger/home/passenger_home.dart';
-import 'package:taxinet/views/welcome_options.dart';
-
-import '../../passenger/home/ride/request_ride.dart';
-import '../../views/login/loginview.dart';
 
 class MyLoginController extends GetxController{
   static MyLoginController get to => Get.find<MyLoginController>();
@@ -18,8 +14,8 @@ class MyLoginController extends GetxController{
 
   late List allPassengers = [];
   late List passengerUserNames = [];
-
   bool isLoading = true;
+  bool hasErrors = false;
   @override
   void onInit() {
     // TODO: implement onInit
@@ -69,19 +65,21 @@ class MyLoginController extends GetxController{
       storage.write("userType", "Passenger");
       username = uname;
       update();
+
+      hasErrors = false;
       if (passengerUserNames.contains(uname)) {
         Timer(const Duration(seconds: 5), () =>
-            Get.offAll(() => const WelcomeOptions()));
+            Get.offAll(() => const PassengerHome()));
       }
       else {
+        hasErrors = true;
         Get.snackbar(
             "Error 😢", "You are not a passenger or invalid credentials provided",
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5)
+            duration: const Duration(seconds: 8)
         );
-        Get.offAll(() => const LoginView());
       }
     }
   }

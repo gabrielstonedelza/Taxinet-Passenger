@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (hasToken && storage.read("userType") == "Passenger") {
       Timer(const Duration(seconds: 7),
-              () => Get.offAll(() => const WelcomeOptions()));
+              () => Get.offAll(() => const PassengerHome()));
     } else {
       Timer(const Duration(seconds: 7),
               () => Get.offAll(() => const LoginView()));
