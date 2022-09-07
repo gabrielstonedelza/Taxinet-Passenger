@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/extension_navigation.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
@@ -14,31 +16,44 @@ import 'package:dio/dio.dart';
 
 import 'package:taxinet/constants/app_colors.dart';
 
-class UserController extends GetxController{
+import '../views/bottomnavigationbar.dart';
 
+class UserController extends GetxController {
   final storage = GetStorage();
   var username = "";
   String uToken = "";
+  String passengerProfileId = "";
+  String passengerUsername = "";
   String profileImage = "";
   String nameOnGhanaCard = "";
   String email = "";
   String phoneNumber = "";
   String fullName = "";
+  String nextOfKin = "";
+  String nextOfKinPhoneNumber = "";
   String frontGhanaCard = "";
   String backGhanaCard = "";
   String referral = "";
-  String verified = "";
+  late bool verified;
   bool isVerified = false;
   late String updateUserName;
   late String updateEmail;
   late String updatePhone;
   bool isUpdating = false;
   var dio = Dio();
+  bool hasUploadedFrontCard = false;
+  bool hasUploadedBackCard = false;
 
   late List profileDetails = [];
   late List passengerUserNames = [];
+  late List allUsers = [];
+  late List phoneNumbers = [];
 
   bool isLoading = true;
+  bool isOpened = false;
+  bool isUploading = false;
+  late Timer _timer;
+  File? image;
 
 
   @override
@@ -52,93 +67,138 @@ class UserController extends GetxController{
       username = storage.read("username");
     }
     getUserProfile();
+    getAllUsers();
+    _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
+      getUserProfile();
+      getAllUsers();
+      update();
+    });
   }
 
   File? profileImageUpload;
   File? frontCard;
   File? backCard;
 
-  Future getFromGalleryForProfilePic()async{
-    PickedFile? pickedFile = await ImagePicker().getImage(
-        source: ImageSource.gallery,
-        maxHeight: 1080,
-        maxWidth: 1080
-    );
-    _cropImageProfilePic(pickedFile!.path);
-  }
-  Future getFromGalleryForFrontCard()async{
-    PickedFile? pickedFile = await ImagePicker().getImage(
-        source: ImageSource.gallery,
-        maxHeight: 1080,
-        maxWidth: 1080
-    );
-    _cropImageFrontCard(pickedFile!.path);
-  }
-  Future getFromGalleryForBackCard()async{
-    PickedFile? pickedFile = await ImagePicker().getImage(
-        source: ImageSource.gallery,
-        maxHeight: 1080,
-        maxWidth: 1080
-    );
-    _cropImageForBackCard(pickedFile!.path);
+  //front cards
+
+  Future getFromGalleryForFrontCard() async{
+    try {
+      final myImage  = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if(myImage == null) return;
+      final imageTemporary = File(myImage.path);
+      image = imageTemporary;
+      update();
+      if(image != null){
+        _uploadAndUpdateFrontCard(image!);
+      }
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print("Error");
+      }
+    }
+
   }
 
-  Future getFromCameraForProfilePic()async{
-    PickedFile? pickedFile = await ImagePicker().getImage(
-        source: ImageSource.camera,
-        maxHeight: 1080,
-        maxWidth: 1080
-    );
-    _cropImageProfilePic(pickedFile!.path);
-  }
-  Future getFromCameraForFrontCard()async{
-    PickedFile? pickedFile = await ImagePicker().getImage(
-        source: ImageSource.camera,
-        maxHeight: 1080,
-        maxWidth: 1080
-    );
-    _cropImageFrontCard(pickedFile!.path);
-  }
-  Future getFromCameraForBackCard()async{
-    PickedFile? pickedFile = await ImagePicker().getImage(
-        source: ImageSource.camera,
-        maxHeight: 1080,
-        maxWidth: 1080
-    );
-    _cropImageForBackCard(pickedFile!.path);
+  Future getFromCameraForFrontCard() async{
+    try {
+      final myImage  = await ImagePicker().pickImage(source: ImageSource.camera);
+      if(myImage == null) return;
+      final imageTemporary = File(myImage.path);
+      image = imageTemporary;
+      update();
+      if(image != null){
+        _uploadAndUpdateFrontCard(image!);
+      }
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print("Error");
+      }
+    }
+
   }
 
-  Future _cropImageProfilePic(filePath)async{
-    File? croppedImage = await ImageCropper().cropImage(
-        sourcePath: filePath,maxHeight:1080,maxWidth:1080
-    );
-    if(croppedImage != null){
-      profileImageUpload = croppedImage;
-      _uploadAndUpdateProfilePic(profileImageUpload!);
-      getUserProfile();
+  //front card
+
+  //back cards
+
+  Future getFromGalleryForBackCard() async{
+    try {
+      final myImage  = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if(myImage == null) return;
+      final imageTemporary = File(myImage.path);
+      image = imageTemporary;
       update();
+      if(image != null){
+        _uploadAndUpdateBackCard(image!);
+      }
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print("Error");
+      }
     }
+
   }
-  Future _cropImageForBackCard(filePath)async{
-    File? croppedImage = await ImageCropper().cropImage(
-        sourcePath: filePath,maxHeight:1080,maxWidth:1080
-    );
-    if(croppedImage != null){
-      backCard = croppedImage;
-      _uploadAndUpdateBackCard(backCard!);
+
+  Future getFromCameraForBackCard() async{
+    try {
+      final myImage  = await ImagePicker().pickImage(source: ImageSource.camera);
+      if(myImage == null) return;
+      final imageTemporary = File(myImage.path);
+      image = imageTemporary;
       update();
+      if(image != null){
+        _uploadAndUpdateBackCard(image!);
+      }
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print("Error");
+      }
     }
+
   }
-  Future _cropImageFrontCard(filePath)async{
-    File? croppedImage = await ImageCropper().cropImage(
-        sourcePath: filePath,maxHeight:1080,maxWidth:1080
-    );
-    if(croppedImage != null){
-      frontCard = croppedImage;
-      _uploadAndUpdateFrontCard(frontCard!);
+
+  //back card
+
+  //profile cards
+
+  Future getFromGalleryForProfilePic() async{
+    try {
+      final myImage  = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if(myImage == null) return;
+      final imageTemporary = File(myImage.path);
+      image = imageTemporary;
       update();
+      if(image != null){
+        _uploadAndUpdateProfilePic(image!);
+      }
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print("Error");
+      }
     }
+
   }
+
+  Future getFromCameraForProfilePic() async{
+    try {
+      final myImage  = await ImagePicker().pickImage(source: ImageSource.camera);
+      if(myImage == null) return;
+      final imageTemporary = File(myImage.path);
+      image = imageTemporary;
+      update();
+      if(image != null){
+        _uploadAndUpdateProfilePic(image!);
+      }
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        print("Error");
+      }
+    }
+
+  }
+
+  //profile card
+
 
   void _uploadAndUpdateProfilePic(File file) async {
     try {
@@ -146,9 +206,11 @@ class UserController extends GetxController{
       //updating user profile details
       String fileName = file.path.split('/').last;
       var formData1 = FormData.fromMap({
-        'profile_pic': await MultipartFile.fromFile(file.path, filename: fileName),
+        'profile_pic':
+            await MultipartFile.fromFile(file.path, filename: fileName),
       });
-      var response = await dio.put('https://taxinetghana.xyz/update_passenger_profile/',
+      var response = await dio.put(
+        'https://taxinetghana.xyz/update_passenger_profile/',
         data: formData1,
         options: Options(headers: {
           "Authorization": "Token $uToken",
@@ -160,32 +222,34 @@ class UserController extends GetxController{
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red);
-      }else{
-        Get.snackbar("Hurray 😀","Your profile picture was updated",
+      } else {
+        Get.snackbar("Hurray 😀", "Your profile picture was updated",
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: primaryColor,
-          duration: const Duration(seconds: 5)
-        );
+            duration: const Duration(seconds: 5));
       }
     } on DioError catch (e) {
       Get.snackbar("Sorry", e.toString(),
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: snackColor);
-    }
-    finally{
+    } finally {
       isUpdating = false;
     }
   }
+
   void _uploadAndUpdateFrontCard(File file) async {
     try {
+      isUpdating = true;
       //updating user profile details
       String fileName = file.path.split('/').last;
       var formData1 = FormData.fromMap({
-        'front_side_ghana_card': await MultipartFile.fromFile(file.path, filename: fileName),
+        'front_side_ghana_card':
+            await MultipartFile.fromFile(file.path, filename: fileName),
       });
-      var response = await dio.put('https://taxinetghana.xyz/update_passenger_profile/',
+      var response = await dio.put(
+        'https://taxinetghana.xyz/update_passenger_profile/',
         data: formData1,
         options: Options(headers: {
           "Authorization": "Token $uToken",
@@ -193,34 +257,39 @@ class UserController extends GetxController{
         }, contentType: Headers.formUrlEncodedContentType),
       );
       if (response.statusCode != 200) {
-        Get.snackbar("Sorry", response.data.toString(),
+        Get.snackbar("Sorry", "Something happened. Please try again later",
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red);
-      }
-      else{
-        Get.snackbar("Hurray 😀","card uploaded successfully",
+      } else {
+        Get.snackbar("Hurray 😀", "card uploaded successfully,you will be notified when verified.",
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: primaryColor,
-            duration: const Duration(seconds: 5)
-        );
+            duration: const Duration(seconds: 5));
       }
     } on DioError catch (e) {
-      Get.snackbar("Sorry", e.toString(),
+      Get.snackbar("Sorry", "Something happened. Please try again later",
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: snackColor);
+          backgroundColor: Colors.red);
+    }
+    finally {
+      isUpdating = false;
     }
   }
+
   void _uploadAndUpdateBackCard(File file) async {
     try {
+      isUpdating = true;
       //updating user profile details
       String fileName = file.path.split('/').last;
       var formData1 = FormData.fromMap({
-        'back_side_ghana_card': await MultipartFile.fromFile(file.path, filename: fileName),
+        'back_side_ghana_card':
+            await MultipartFile.fromFile(file.path, filename: fileName),
       });
-      var response = await dio.put('https://taxinetghana.xyz/update_passenger_profile/',
+      var response = await dio.put(
+        'https://taxinetghana.xyz/update_passenger_profile/',
         data: formData1,
         options: Options(headers: {
           "Authorization": "Token $uToken",
@@ -228,25 +297,25 @@ class UserController extends GetxController{
         }, contentType: Headers.formUrlEncodedContentType),
       );
       if (response.statusCode != 200) {
-        Get.snackbar("Sorry", response.data.toString(),
+        Get.snackbar("Sorry", "something happened,please try again later",
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red);
-
-      }
-      else{
-        Get.snackbar("Hurray 😀","card uploaded successfully.",
+      } else {
+        Get.snackbar("Hurray 😀", "card uploaded successfully,you will be notified when verified.",
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: primaryColor,
-            duration: const Duration(seconds: 5)
-        );
+            duration: const Duration(seconds: 5));
       }
     } on DioError catch (e) {
-      Get.snackbar("Sorry", e.toString(),
+      Get.snackbar("Sorry", "something happened,please try again later",
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: snackColor);
+          backgroundColor: Colors.red);
+    }
+    finally {
+      isUpdating = false;
     }
   }
 
@@ -262,82 +331,138 @@ class UserController extends GetxController{
       if (response.statusCode == 200) {
         var jsonData = jsonDecode(response.body);
         profileDetails = jsonData;
-        for(var i in profileDetails){
+        for (var i in profileDetails) {
           profileImage = i['passenger_profile_pic'];
           nameOnGhanaCard = i['name_on_ghana_card'];
           email = i['get_passengers_email'];
           phoneNumber = i['get_passengers_phone_number'];
           fullName = i['get_passengers_full_name'];
+          nextOfKin = i['next_of_kin'];
+          nextOfKinPhoneNumber = i['next_of_kin_number'];
           frontGhanaCard = i['get_front_side_ghana_card'];
           backGhanaCard = i['get_back_side_ghana_card'];
           referral = i['referral'];
+          verified = i['verified'];
+          passengerProfileId = i['id'].toString();
+          passengerUsername = i['username'].toString();
         }
         update();
+        storage.write("verified", "Verified");
+        storage.write("profile_id", passengerProfileId);
+        storage.write("profile_name", fullName);
+        storage.write("profile_pic", profileImage);
+        storage.write("passenger_username", passengerUsername);
+      }
+      else{
+        print(response.body);
       }
     } catch (e) {
-      Get.snackbar("Sorry",
-          "something happened or please check your internet connection");
-    }
-    finally{
+      if (kDebugMode) {
+        print(e.toString());
+      }
+    } finally {
       isLoading = false;
     }
   }
 
-  updateProfileDetails(String updateUserName,String updateEmail,String updatePhone)async{
+  Future<void> getAllUsers() async {
+    try {
+      isLoading = true;
+      const profileLink = "https://taxinetghana.xyz/users/";
+      var link = Uri.parse(profileLink);
+      http.Response response = await http.get(link, headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": "Token $uToken"
+      });
+      if (response.statusCode == 200) {
+        var jsonData = jsonDecode(response.body);
+        allUsers = jsonData;
+        for (var i in allUsers) {
+         if(!phoneNumbers.contains(i['phone_number'])){
+           phoneNumbers.add(i['phone_number']);
+         }
+        }
+        update();
+      }
+      else{
+        if (kDebugMode) {
+          print(response.body);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print(e.toString());
+      }
+    } finally {
+      isLoading = false;
+    }
+  }
+
+
+  updateProfileDetails(String updateUserName, String updateEmail,String fullName, String updatePhone) async {
     const updateUrl = "https://taxinetghana.xyz/update_username/";
     final myUrl = Uri.parse(updateUrl);
-    http.Response response = await http.put(myUrl,
-        headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-          "Authorization": "Token $uToken"
-        },
-        body: {"username": updateUserName,"email":updateEmail,"phone_number":updatePhone},
-
+    http.Response response = await http.put(
+      myUrl,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": "Token $uToken"
+      },
+      body: {
+        "username": updateUserName,
+        "email": updateEmail,
+        "full_name": fullName,
+        "phone_number": updatePhone
+      },
     );
-    if(response.statusCode == 200){
+    if (response.statusCode == 200) {
       Get.snackbar("Hurray 😀", "Your profile was updated",
           duration: const Duration(seconds: 5),
           snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: primaryColor,
-        colorText: defaultTextColor1
-      );
+          backgroundColor: primaryColor,
+          colorText: defaultTextColor1);
       update();
       isUpdating = false;
-    }
-    else{
-      print(response.body);
+    } else {
+      Get.snackbar("Sorry 😢", response.body,
+          duration: const Duration(seconds: 5),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: defaultTextColor1);
     }
   }
-  updatePassengerProfile(String nameOnGCard,String nextOfKin,String nextOfKinNumber,String referral)async{
+
+  updatePassengerProfile(String referral) async {
     const updateUrl = "https://taxinetghana.xyz/update_passenger_profile/";
     final myUrl = Uri.parse(updateUrl);
-    http.Response response = await http.put(myUrl,
-        headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-          "Authorization": "Token $uToken"
-        },
-        body: {
-      "name_on_ghana_card": nameOnGCard,
-          "next_of_kin":nextOfKin,
-          "next_of_kin_number":nextOfKinNumber,
-          "referral":referral
-        },
-
+    http.Response response = await http.put(
+      myUrl,
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": "Token $uToken"
+      },
+      body: {
+        // "name_on_ghana_card": nameOnGCard,
+        // "next_of_kin": nextOfKin,
+        // "next_of_kin_number": nextOfKinNumber,
+        "referral": referral
+      },
     );
-    if(response.statusCode == 200){
-      Get.snackbar("Hurray 😀", "Your profile was updated",
+    if (response.statusCode == 200) {
+      Get.snackbar("Hurray 😀", "referral added successfully",
           duration: const Duration(seconds: 5),
           snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: primaryColor,
-        colorText: defaultTextColor1
-      );
+          backgroundColor: primaryColor,
+          colorText: defaultTextColor1);
+      Get.offAll(() => const MyBottomNavigationBar());
       update();
       isUpdating = false;
-    }
-    else{
-      print(response.body);
+    } else {
+      Get.snackbar("Sorry 😢", "something went wrong,please try again later",
+          duration: const Duration(seconds: 5),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: defaultTextColor1);
     }
   }
-
-
 }

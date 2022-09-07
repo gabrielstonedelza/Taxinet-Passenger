@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:taxinet/views/forgotpassword.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../constants/app_colors.dart';
 import '../../g_controller/login_controller.dart';
@@ -17,13 +17,14 @@ class LoginView extends StatefulWidget {
 
 class _LoginViewState extends State<LoginView> {
   final loginData = MyLoginController.to;
-  late final TextEditingController _phoneNumberController;
+  late final TextEditingController _usernameController;
   late final TextEditingController _passwordController;
   final _formKey = GlobalKey<FormState>();
   bool isObscured = true;
   bool isPosting = false;
   final FocusNode _usernameFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
+  final storage = GetStorage();
 
   String resetPasswordUrl = "https://taxinetghana.xyz/password-reset/";
 
@@ -36,30 +37,22 @@ class _LoginViewState extends State<LoginView> {
     }
   }
 
-  void _startPosting() async{
-    setState(() {
-      isPosting = true;
-    });
-    await Future.delayed(const Duration(seconds: 4));
-
-    setState(() {
-      isPosting = false;
-    });
-  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _phoneNumberController = TextEditingController();
+    _usernameController = TextEditingController();
     _passwordController = TextEditingController();
+    if (storage.read("userToken") != null) {
+      storage.remove("userToken");
+    }
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    _startPosting();
   }
 
 
@@ -94,13 +87,13 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       child: Center(
                         child: TextFormField(
-                          controller: _phoneNumberController,
+                          controller: _usernameController,
                           focusNode: _usernameFocusNode,
                           decoration: const InputDecoration(
                               border: InputBorder.none,
                               prefixIcon: Icon(Icons.person,color: defaultTextColor1,),
                               hintText: "Username",
-                              hintStyle: TextStyle(color: defaultTextColor1),
+                              hintStyle: TextStyle(color: defaultTextColor1,),
 
                           ),
                           cursorColor: defaultTextColor1,
@@ -109,7 +102,10 @@ class _LoginViewState extends State<LoginView> {
                           textInputAction: TextInputAction.next,
                           validator: (value){
                             if(value!.isEmpty){
-                              return "";
+                              return "Enter username";
+                            }
+                            else{
+                              return null;
                             }
                           },
                         ),
@@ -149,7 +145,10 @@ class _LoginViewState extends State<LoginView> {
                           obscureText: isObscured,
                           validator: (value){
                             if(value!.isEmpty){
-                              return "";
+                              return "Enter password";
+                            }
+                            else{
+                              return null;
                             }
                           },
                         ),
@@ -174,30 +173,18 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       height: size.height * 0.08,
                       width: size.width * 0.8,
-                      child: isPosting ? const Center(
-                        child: CircularProgressIndicator.adaptive(
-                          strokeWidth: 5,
-                          backgroundColor: Colors.grey,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-
-                        ),
-                      ) :RawMaterialButton(
+                      child: RawMaterialButton(
                         onPressed: () {
-                          _startPosting();
-                          if (!_formKey.currentState!.validate()) {
+                          if (_formKey.currentState!.validate()) {
+                            loginData.loginUser(_usernameController.text.trim(), _passwordController.text.trim());
 
-                              Get.snackbar("Error", "Something went wrong",
-                                  colorText: defaultTextColor1,
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: Colors.red
-                              );
-                              setState(() {
-                                isPosting = false;
-                              });
-
-                            return;
                           } else {
-                            loginData.loginUser(_phoneNumberController.text.trim(), _passwordController.text.trim());
+                            Get.snackbar("Error", "Something went wrong",
+                                colorText: defaultTextColor1,
+                                snackPosition: SnackPosition.BOTTOM,
+                                backgroundColor: Colors.red
+                            );
+                            return;
                           }
                         },
                         shape: RoundedRectangleBorder(

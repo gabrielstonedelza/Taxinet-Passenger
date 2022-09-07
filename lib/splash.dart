@@ -4,9 +4,10 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:taxinet/passenger/home/passenger_home.dart';
-import 'package:taxinet/passenger/home/ride/request_ride.dart';
+import 'package:taxinet/views/bottomnavigationbar.dart';
 import 'package:taxinet/views/login/loginview.dart';
-import 'package:taxinet/views/welcome_options.dart';
+import 'package:taxinet/views/login/newlogin.dart';
+
 
 import 'g_controller/login_controller.dart';
 
@@ -38,10 +39,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (hasToken && storage.read("userType") == "Passenger") {
       Timer(const Duration(seconds: 7),
-              () => Get.offAll(() => const PassengerHome()));
+              () => Get.offAll(() => const MyBottomNavigationBar()));
     } else {
       Timer(const Duration(seconds: 7),
-              () => Get.offAll(() => const LoginView()));
+              () => Get.offAll(() => const NewLogin()));
     }
   }
 

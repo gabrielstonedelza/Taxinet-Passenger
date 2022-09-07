@@ -1,25 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:taxinet/controllers/notification_provider.dart';
+import 'package:taxinet/g_controller/notificationController.dart';
 import 'package:taxinet/g_controller/registration_controller.dart';
 import 'package:taxinet/g_controller/userController.dart';
 import 'package:taxinet/splash.dart';
-import 'package:taxinet/states/app_state.dart';
+import 'package:taxinet/states/schedule_state.dart';
 import 'package:get/get.dart';
+import 'constants/themeprovider.dart';
 import 'g_controller/login_controller.dart';
+import 'g_controller/ridesController.dart';
+import 'g_controller/schedulescontroller.dart';
+import 'g_controller/walletcontroller.dart';
 
-
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   await GetStorage.init();
   Get.put(MyLoginController());
   Get.put(MyRegistrationController());
-  Get.put(DeMapController());
+  Get.put(RidesController());
+  Get.put(NotificationController());
   Get.put(UserController());
+  Get.put(WalletController());
+  Get.put(ScheduleController());
   runApp(const MyApp());
 }
 
@@ -31,18 +38,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create:(context)=> AppState()),
+        ChangeNotifierProvider(create: (context) => NotificationProvider()),
+        ChangeNotifierProvider(create: (context) => ScheduleState()),
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
       ],
-      child: GetMaterialApp(
+      child: const GetMaterialApp(
         debugShowCheckedModeBanner: false,
-        defaultTransition: Transition.upToDown,
-        theme: ThemeData(
-// This is the theme of your application.
-          primarySwatch: Colors.blue,
-          textTheme: GoogleFonts.sansitaSwashedTextTheme(Theme.of(context).textTheme)
-
-        ),
-        home: const SplashScreen(),
+        defaultTransition: Transition.leftToRight,
+        // themeMode: ThemeMode.system,
+        // theme:MyThemes.lightTheme,
+        // darkTheme: MyThemes.darkTheme,
+        home: SplashScreen(),
       ),
     );
   }

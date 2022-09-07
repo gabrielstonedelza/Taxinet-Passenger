@@ -38,18 +38,18 @@ class LocalNotificationManager{
     initSetting = InitializationSettings(android: initSettingAndroid,iOS: initSettingIOS);
   }
 
-  //ride reject alert
-  setOnRejectedRideNotificationReceive(Function onNotificationReceive){
+  // show all notifications
+  setOnAllNotificationReceive(Function onNotificationReceive){
     didReceiveLocalNotificationSubject.listen((notification) {
       onNotificationReceive(notification);
     });
   }
-  setOnRejectedRideNotificationClick(Function onNotificationClick)async{
+  setOnAllNotificationClick(Function onNotificationClick)async{
     await flutterLocalNotificationsPlugin.initialize(initSetting,onSelectNotification: (String? payload)async{
       onNotificationClick(payload);
     });
   }
-  Future<void> showRejectedRideNotification(String? title,String? body) async{
+  Future<void> showAllNotification(String? title,String? body) async{
     var androidChannel = const AndroidNotificationDetails(
         "CHANNEL_ID",
         "CHANNEL_NAME",
@@ -62,107 +62,6 @@ class LocalNotificationManager{
     var platformChannel = NotificationDetails(android: androidChannel,iOS: iosChannel);
     await flutterLocalNotificationsPlugin.show(0,title,body,platformChannel,payload: "New Payload");
   }
-
-//  ride accept alert
-  setOnAcceptedRideNotificationReceive(Function onNotificationReceive){
-    didReceiveLocalNotificationSubject.listen((notification) {
-      onNotificationReceive(notification);
-    });
-  }
-  setOnAcceptedRideNotificationClick(Function onNotificationClick)async{
-    await flutterLocalNotificationsPlugin.initialize(initSetting,onSelectNotification: (String? payload)async{
-      onNotificationClick(payload);
-    });
-  }
-  Future<void> showAcceptedRideNotification(String? title,String? body) async{
-    var androidChannel = const AndroidNotificationDetails(
-        "CHANNEL_ID",
-        "CHANNEL_NAME",
-        importance: Importance.max,
-        priority: Priority.high,
-        playSound: true,
-        sound: RawResourceAndroidNotificationSound("horn")
-    );
-    var iosChannel = const IOSNotificationDetails();
-    var platformChannel = NotificationDetails(android: androidChannel,iOS: iosChannel);
-    await flutterLocalNotificationsPlugin.show(0,title,body,platformChannel,payload: "New Payload");
-  }
-
-//  ride complete alert
-  setOnCompletedRideNotificationReceive(Function onNotificationReceive){
-    didReceiveLocalNotificationSubject.listen((notification) {
-      onNotificationReceive(notification);
-    });
-  }
-  setOnCompletedRideNotificationClick(Function onNotificationClick)async{
-    await flutterLocalNotificationsPlugin.initialize(initSetting,onSelectNotification: (String? payload)async{
-      onNotificationClick(payload);
-    });
-  }
-  Future<void> showCompletedRideNotification(String? title,String? body) async{
-    var androidChannel = const AndroidNotificationDetails(
-        "CHANNEL_ID",
-        "CHANNEL_NAME",
-        importance: Importance.max,
-        priority: Priority.high,
-        playSound: true,
-        sound: RawResourceAndroidNotificationSound("horn")
-    );
-    var iosChannel = const IOSNotificationDetails();
-    var platformChannel = NotificationDetails(android: androidChannel,iOS: iosChannel);
-    await flutterLocalNotificationsPlugin.show(0,title,body,platformChannel,payload: "New Payload");
-  }
-
-//  driver arrival alert
-  setOnDriverArrivalNotificationReceive(Function onNotificationReceive){
-    didReceiveLocalNotificationSubject.listen((notification) {
-      onNotificationReceive(notification);
-    });
-  }
-  setOnDriverArrivalNotificationClick(Function onNotificationClick)async{
-    await flutterLocalNotificationsPlugin.initialize(initSetting,onSelectNotification: (String? payload)async{
-      onNotificationClick(payload);
-    });
-  }
-  Future<void> showDriverArrivalNotification(String? title,String? body) async{
-    var androidChannel = const AndroidNotificationDetails(
-        "CHANNEL_ID",
-        "CHANNEL_NAME",
-        importance: Importance.max,
-        priority: Priority.high,
-        playSound: true,
-        sound: RawResourceAndroidNotificationSound("horn")
-    );
-    var iosChannel = const IOSNotificationDetails();
-    var platformChannel = NotificationDetails(android: androidChannel,iOS: iosChannel);
-    await flutterLocalNotificationsPlugin.show(0,title,body,platformChannel,payload: "New Payload");
-  }
-
-  //  bid complete alert
-  setOnBidCompleteNotificationReceive(Function onNotificationReceive){
-    didReceiveLocalNotificationSubject.listen((notification) {
-      onNotificationReceive(notification);
-    });
-  }
-  setOnBidCompleteNotificationClick(Function onNotificationClick)async{
-    await flutterLocalNotificationsPlugin.initialize(initSetting,onSelectNotification: (String? payload)async{
-      onNotificationClick(payload);
-    });
-  }
-  Future<void> showBidCompleteNotification(String? title,String? body) async{
-    var androidChannel = const AndroidNotificationDetails(
-        "CHANNEL_ID",
-        "CHANNEL_NAME",
-        importance: Importance.max,
-        priority: Priority.high,
-        playSound: true,
-        sound: RawResourceAndroidNotificationSound("horn")
-    );
-    var iosChannel = const IOSNotificationDetails();
-    var platformChannel = NotificationDetails(android: androidChannel,iOS: iosChannel);
-    await flutterLocalNotificationsPlugin.show(0,title,body,platformChannel,payload: "New Payload");
-  }
-
 
 }
 

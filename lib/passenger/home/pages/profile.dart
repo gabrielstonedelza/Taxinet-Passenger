@@ -1,12 +1,15 @@
-import 'package:flip_card/flip_card_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:taxinet/g_controller/userController.dart';
 import 'package:flip_card/flip_card.dart';
 import 'package:taxinet/passenger/home/pages/editProfile.dart';
 import '../../../constants/app_colors.dart';
+import '../../../views/login/loginview.dart';
+import 'package:http/http.dart' as http;
 
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
@@ -16,16 +19,36 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  final storage = GetStorage();
+
   double hPadding = 40;
-  PanelController panelController = PanelController();
-  FlipCardController? _controller;
   bool isOpened = false;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _controller = FlipCardController();
+  PanelController panelController = PanelController();
+
+  UserController userController = Get.find();
+
+  logoutUser() async {
+    storage.remove("username");
+    Get.offAll(() => const LoginView());
+    const logoutUrl = "https://taxinetghana.xyz/auth/token/logout";
+    final myLink = Uri.parse(logoutUrl);
+    http.Response response = await http.post(myLink, headers: {
+      'Accept': 'application/json',
+      "Authorization": "Token ${storage.read("userToken")}"
+    });
+
+    if (response.statusCode == 200) {
+      Get.snackbar("Success", "You were logged out",
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: snackColor);
+      storage.remove("username");
+      storage.remove("userToken");
+      storage.remove("user_type");
+      storage.remove("verified");
+      Get.offAll(() => const LoginView());
+    }
   }
 
   @override
@@ -36,21 +59,31 @@ class _ProfileState extends State<Profile> {
           fit: StackFit.expand,
           children: [
             FractionallySizedBox(
-              alignment: Alignment.topCenter,
-              heightFactor: 0.7,
-              child: Get.find<UserController>().profileImage != "" ? GetBuilder<UserController>(
-                builder: (controller) {
-                  return Container(
-                    decoration: BoxDecoration(
-                        image: DecorationImage(
-                            image: NetworkImage(controller.profileImage),
-                            fit: BoxFit.cover)),
-                  );
-                },
-              ):const Icon(
-                FontAwesomeIcons.user,size: 20,
-              )
-            ),
+                alignment: Alignment.topCenter,
+                heightFactor: 0.7,
+                child: userController.profileImageUpload != null
+                    ? GetBuilder<UserController>(
+                        builder: (controller) {
+                          return Container(
+                            decoration: BoxDecoration(
+                                image: DecorationImage(
+                                    image: FileImage(
+                                        userController.profileImageUpload!),
+                                    fit: BoxFit.cover)),
+                          );
+                        },
+                      )
+                    : GetBuilder<UserController>(
+                        builder: (controller) {
+                          return Container(
+                            decoration: BoxDecoration(
+                                image: DecorationImage(
+                                    image: NetworkImage(
+                                        userController.profileImage),
+                                    fit: BoxFit.cover)),
+                          );
+                        },
+                      )),
             FractionallySizedBox(
               alignment: Alignment.bottomCenter,
               heightFactor: 0.3,
@@ -65,21 +98,21 @@ class _ProfileState extends State<Profile> {
               minHeight: MediaQuery.of(context).size.height * 0.3,
               maxHeight: MediaQuery.of(context).size.height * 0.85,
               body: GestureDetector(
-                onTap: ()=> panelController.close(),
+                onTap: () => panelController.close(),
                 child: Container(
                   color: Colors.transparent,
                 ),
               ),
-              onPanelSlide: (value){
-                if(value >= 0.2){
-                  if(!isOpened){
+              onPanelSlide: (value) {
+                if (value >= 0.2) {
+                  if (!isOpened) {
                     setState(() {
                       isOpened = true;
                     });
                   }
                 }
               },
-              onPanelClosed: (){
+              onPanelClosed: () {
                 setState(() {
                   isOpened = false;
                 });
@@ -99,28 +132,159 @@ class _ProfileState extends State<Profile> {
                           children: [
                             Column(
                               children: [
-                                GetBuilder<UserController>(
-                                    builder: (controller) {
-                                  return Text(
-                                    controller.fullName,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 20),
-                                  );
-                                }),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: () {
+                                        showMaterialModalBottomSheet(
+                                          backgroundColor: secondaryColor,
+                                          shape: const RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.only(
+                                                  topLeft: Radius.circular(10),
+                                                  topRight:
+                                                      Radius.circular(10))),
+                                          bounce: true,
+                                          context: context,
+                                          builder: (context) =>
+                                              SingleChildScrollView(
+                                            controller:
+                                                ModalScrollController.of(
+                                                    context),
+                                            child: SizedBox(
+                                              height: 200,
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(18.0),
+                                                child: ListView(
+                                                  children: [
+                                                    const Center(
+                                                      child: Text(
+                                                        "Logout",
+                                                        style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 20),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 20),
+                                                    Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child:
+                                                              RawMaterialButton(
+                                                            onPressed: () {
+                                                              logoutUser();
+                                                            },
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            12)),
+                                                            elevation: 8,
+                                                            child:
+                                                                const Padding(
+                                                              padding:
+                                                                  EdgeInsets
+                                                                      .all(8.0),
+                                                              child: Text(
+                                                                "Yes",
+                                                                style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        15,
+                                                                    color:
+                                                                        defaultTextColor1),
+                                                              ),
+                                                            ),
+                                                            fillColor:
+                                                                Colors.red,
+                                                            splashColor:
+                                                                defaultColor,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 10,
+                                                        ),
+                                                        Expanded(
+                                                          child:
+                                                              RawMaterialButton(
+                                                            onPressed: () {
+                                                              Get.back();
+                                                            },
+                                                            shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            12)),
+                                                            elevation: 8,
+                                                            child:
+                                                                const Padding(
+                                                              padding:
+                                                                  EdgeInsets
+                                                                      .all(8.0),
+                                                              child: Text(
+                                                                "No",
+                                                                style: TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize:
+                                                                        15,
+                                                                    color:
+                                                                        defaultTextColor1),
+                                                              ),
+                                                            ),
+                                                            fillColor:
+                                                                primaryColor,
+                                                            splashColor:
+                                                                defaultColor,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    )
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      icon: Image.asset(
+                                        "assets/images/power-off.png",
+                                        width: 30,
+                                        height: 30,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                    GetBuilder<UserController>(
+                                        builder: (controller) {
+                                      return Text(
+                                        controller.fullName,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20),
+                                      );
+                                    }),
+                                  ],
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                ),
                                 const SizedBox(
                                   height: 10,
                                 ),
-                                GetBuilder<UserController>(
-                                    builder: (controller) {
-                                  return Text(
-                                    controller.username,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                        color: Colors.grey),
-                                  );
-                                }),
+                                // GetBuilder<UserController>(
+                                //     builder: (controller) {
+                                //   return Text(
+                                //     controller.username,
+                                //     style: const TextStyle(
+                                //         fontWeight: FontWeight.bold,
+                                //         fontSize: 15,
+                                //         color: Colors.grey),
+                                //   );
+                                // }),
                               ],
                             ),
                             Row(
@@ -157,14 +321,15 @@ class _ProfileState extends State<Profile> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Visibility(
-                                  visible:!isOpened,
+                                  visible: !isOpened,
                                   child: Expanded(
                                     child: RawMaterialButton(
                                       onPressed: () {
                                         panelController.open();
                                       },
                                       shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8)),
+                                          borderRadius:
+                                              BorderRadius.circular(8)),
                                       elevation: 8,
                                       child: const Text(
                                         "More",
@@ -187,7 +352,7 @@ class _ProfileState extends State<Profile> {
                                 Expanded(
                                   child: RawMaterialButton(
                                     onPressed: () {
-                                      Get.to(()=> EditProfile(username:Get.find<UserController>().username,email:Get.find<UserController>().email,phone:Get.find<UserController>().phoneNumber,profilePic:Get.find<UserController>().profileImage));
+                                      Get.to(() => const EditProfile());
                                     },
                                     shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8)),
@@ -205,60 +370,83 @@ class _ProfileState extends State<Profile> {
                             const SizedBox(
                               height: 10,
                             ),
-                            Get.find<UserController>().frontGhanaCard != "" && Get.find<UserController>().backGhanaCard != "" ? const Center(
-                              child: Text(
-                                "Ghana Card",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ):Text(""),
+                            userController.frontGhanaCard != "" &&
+                                    userController.backGhanaCard != ""
+                                ? const Center(
+                                    child: Text(
+                                      "Ghana Card",
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  )
+                                : const Text(""),
                           ],
                         ),
                       ),
-                      Get.find<UserController>().frontGhanaCard != "" && Get.find<UserController>().backGhanaCard != "" ? GetBuilder<UserController>(
-                        builder: (controller) {
-                          return FlipCard(
-                            fill: Fill
-                                .fillBack, // Fill the back side of the card to make in the same size as
-                            direction:
-                            FlipDirection.HORIZONTAL, // default
-                            front: Get.find<UserController>().frontGhanaCard != "" ? ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Container(
-                                height: 200,
-                                width: 320,
-                                decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                        image: NetworkImage(
-                                            controller.frontGhanaCard),
-                                        fit: BoxFit.cover)),
-                              ),
-                            ): const Text("You haven't uploaded your Ghana Card yet"),
-                            back: Get.find<UserController>().backGhanaCard != "" ? ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Container(
-                                height: 200,
-                                width: 320,
-                                decoration: BoxDecoration(
-                                    image: DecorationImage(
-                                        image: NetworkImage(
-                                            controller.backGhanaCard),
-                                        fit: BoxFit.cover)),
-                              ),
-                            ):const Text("You haven't uploaded your Ghana Card yet"),
-                          );
-                        },
-                      ): Get.find<UserController>().frontGhanaCard != "" && Get.find<UserController>().backGhanaCard != "" ? const Center(
-                        child: Text("Loading your GH Card"),
-                      ) : Container(),
+                      userController.frontGhanaCard != "" &&
+                              userController.backGhanaCard != ""
+                          ? GetBuilder<UserController>(
+                              builder: (controller) {
+                                return FlipCard(
+                                  fill: Fill
+                                      .fillBack, // Fill the back side of the card to make in the same size as
+                                  direction:
+                                      FlipDirection.HORIZONTAL, // default
+                                  front: userController.frontGhanaCard != ""
+                                      ? ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          child: Container(
+                                            height: 200,
+                                            width: 320,
+                                            decoration: BoxDecoration(
+                                                image: DecorationImage(
+                                                    image: NetworkImage(
+                                                        controller
+                                                            .frontGhanaCard),
+                                                    fit: BoxFit.cover)),
+                                          ),
+                                        )
+                                      : const Text(
+                                          "You haven't uploaded your Ghana Card yet"),
+                                  back: userController.backGhanaCard != ""
+                                      ? ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                          child: Container(
+                                            height: 200,
+                                            width: 320,
+                                            decoration: BoxDecoration(
+                                                image: DecorationImage(
+                                                    image: NetworkImage(
+                                                        controller
+                                                            .backGhanaCard),
+                                                    fit: BoxFit.cover)),
+                                          ),
+                                        )
+                                      : const Text(
+                                          "You haven't uploaded your Ghana Card yet"),
+                                );
+                              },
+                            )
+                          : userController.frontGhanaCard != "" &&
+                                  userController.backGhanaCard != ""
+                              ? const Center(
+                                  child: Text("Loading your GH Card"),
+                                )
+                              : Container(),
                       const SizedBox(
                         height: 10,
                       ),
-                      Get.find<UserController>().frontGhanaCard != "" && Get.find<UserController>().backGhanaCard != "" ? const Center(
-                        child: Text(
-                          "Tap to flip card",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ):Container(),
+                      userController.frontGhanaCard != "" &&
+                              userController.backGhanaCard != ""
+                          ? const Center(
+                              child: Text(
+                                "Tap to flip card",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            )
+                          : Container(),
                       const SizedBox(
                         height: 10,
                       ),
@@ -266,39 +454,63 @@ class _ProfileState extends State<Profile> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.only(top: 18.0,right: 18.0),
+                            padding:
+                                const EdgeInsets.only(top: 18.0, right: 18.0),
                             child: Row(
                               children: const [
                                 Padding(
                                   padding: EdgeInsets.only(right: 8.0),
                                   child: Icon(FontAwesomeIcons.user),
                                 ),
-                                Text("Referral: ",style: TextStyle(fontWeight: FontWeight.bold),)
+                                Text(
+                                  "Referral: ",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                )
                               ],
                             ),
                           ),
-                          Get.find<UserController>().referral != "" ? GetBuilder<UserController>(builder: (controller){
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 18.0,left: 18.0),
-                              child: Text(controller.referral,style: const TextStyle(fontWeight: FontWeight.bold),),
-                            );
-                          },) : const Padding(
-                            padding: EdgeInsets.only(top: 18.0),
-                            child: Text("No referral added",style: TextStyle(fontWeight: FontWeight.bold),),
-                          )
+                          userController.referral != ""
+                              ? GetBuilder<UserController>(
+                                  builder: (controller) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: 18.0, left: 18.0),
+                                      child: Text(
+                                        controller.referral,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    );
+                                  },
+                                )
+                              : const Padding(
+                                  padding: EdgeInsets.only(top: 18.0),
+                                  child: Text(
+                                    "No referral added",
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                )
                         ],
                       ),
                       const SizedBox(
                         height: 15,
                       ),
-                      GetBuilder<UserController>(builder: (controller){
-                        if(controller.referral != "") {
-                          return Image.asset("assets/images/check.png",width: 50,height: 50,);
-                        }
-                        else{
-                          return const Center(child: Text("Not Verified"),);
-                        }
-                      },),
+                      GetBuilder<UserController>(
+                        builder: (controller) {
+                          if (controller.referral != "") {
+                            return Image.asset(
+                              "assets/images/check.png",
+                              width: 50,
+                              height: 50,
+                            );
+                          } else {
+                            return const Center(
+                              child: Text("Not Verified"),
+                            );
+                          }
+                        },
+                      ),
                       const SizedBox(
                         height: 10,
                       ),

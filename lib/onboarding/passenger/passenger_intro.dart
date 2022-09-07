@@ -44,7 +44,7 @@ class _PassengerOnBoardingState extends State<PassengerOnBoarding> {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: const [
                     Text("THis is one"),
                     Text("THis is Two"),
                   ],

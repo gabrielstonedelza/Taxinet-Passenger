@@ -1,307 +1,301 @@
-import 'dart:async';
-import 'dart:convert';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
+import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
-import 'package:get_storage/get_storage.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:provider/provider.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:taxinet/passenger/home/pages/notifications.dart';
 import 'package:taxinet/passenger/home/pages/profile.dart';
-import 'package:taxinet/passenger/home/pages/rides.dart';
-import 'package:taxinet/passenger/home/ride/request_ride.dart';
+import 'package:taxinet/passenger/home/scheduledetail.dart';
+import 'package:taxinet/widgets/mydrawer.dart';
+import '../../constants/app_colors.dart';
+import '../../g_controller/schedulescontroller.dart';
+import '../../g_controller/userController.dart';
+import '../../views/welcome_options.dart';
 
-import '../../controllers/notifications/localnotification_manager.dart';
-import '../../states/app_state.dart';
-import 'bidding_page.dart';
-import 'driveronroute.dart';
 
-class PassengerHome extends StatefulWidget {
-  const PassengerHome({Key? key}) : super(key: key);
+class PassengerHome extends StatelessWidget {
+  PassengerHome({Key? key}) : super(key: key);
 
-  @override
-  State<PassengerHome> createState() => _PassengerHomeState();
-}
-
-class _PassengerHomeState extends State<PassengerHome>
-    with SingleTickerProviderStateMixin {
-  TabController? _tabController;
-  int selectedIndex = 0;
-
-  onTabClicked(int index) {
-    setState(() {
-      selectedIndex = index;
-      _tabController!.index = selectedIndex;
-    });
+  String greetingMessage(){
+    var timeNow = DateTime.now().hour;
+    if (timeNow <= 12) {
+      return 'Good Morning';
+    } else if ((timeNow > 12) && (timeNow <= 16)) {
+      return 'Good Afternoon';
+    } else if ((timeNow > 16) && (timeNow < 20)) {
+      return 'Good Evening';
+    } else {
+      return 'Good Night';
+    }
   }
-
-  final Completer<GoogleMapController> _mapController = Completer();
-  late FocusNode destinationFocus;
-  bool hasLocation = false;
-  final storage = GetStorage();
-  late String username = "";
-  late String uToken = "";
+  UserController userController = Get.find();
+  ScheduleController scheduleController = Get.find();
   var items;
-  late Timer _timer;
-  final deMapController = DeMapController.to;
-  late List triggeredNotifications = [];
-  late List triggered = [];
-  late List yourNotifications = [];
-  late List notRead = [];
-  late List allNotifications = [];
-  late List allNots = [];
-  bool isLoading = true;
-  bool isRead = true;
-  late String passengerPickUp = "";
-  late String passengerPickUpPlaceId = "";
-
-  String driver = "";
-
-  late List driversLocationDetails = [];
-  late String driversLat = "";
-  late String driversLng = "";
-  late String passengersPickUP = "";
-  late String passengersPickUpId = "";
-
-  Future<void> getDriverLocation() async {
-    final url = "https://taxinetghana.xyz/get_driver_location/$driver";
-    var myLink = Uri.parse(url);
-    final response =
-        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
-    if (response.statusCode == 200) {
-      final codeUnits = response.body.codeUnits;
-      var jsonData = const Utf8Decoder().convert(codeUnits);
-      var results = json.decode(jsonData);
-      driversLocationDetails.assignAll(results);
-      for (var i in driversLocationDetails) {
-        setState(() {
-          driversLat = i['drivers_lat'];
-          driversLng = i['drivers_lng'];
-        });
-      }
-    } else {
-
-    }
-  }
-
-  Future<void> getAllTriggeredNotifications(String token) async {
-    const url = "https://taxinetghana.xyz/user_triggerd_notifications/";
-    var myLink = Uri.parse(url);
-    final response =
-        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
-    if (response.statusCode == 200) {
-      final codeUnits = response.body.codeUnits;
-      var jsonData = const Utf8Decoder().convert(codeUnits);
-      triggeredNotifications = json.decode(jsonData);
-      triggered.assignAll(triggeredNotifications);
-    }
-  }
-
-  Future<void> getAllUnReadNotifications(String token) async {
-    const url = "https://taxinetghana.xyz/user_notifications/";
-    var myLink = Uri.parse(url);
-    final response =
-        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
-    if (response.statusCode == 200) {
-      final codeUnits = response.body.codeUnits;
-      var jsonData = const Utf8Decoder().convert(codeUnits);
-      yourNotifications = json.decode(jsonData);
-      notRead.assignAll(yourNotifications);
-    }
-  }
-
-  Future<void> getAllNotifications(String token) async {
-    const url = "https://taxinetghana.xyz/notifications/";
-    var myLink = Uri.parse(url);
-    final response =
-        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
-    if (response.statusCode == 200) {
-      final codeUnits = response.body.codeUnits;
-      var jsonData = const Utf8Decoder().convert(codeUnits);
-      allNotifications = json.decode(jsonData);
-      allNots.assignAll(allNotifications);
-    }
-    setState(() {
-      isLoading = false;
-      allNotifications = allNotifications;
-    });
-  }
-
-  unTriggerNotifications(int id) async {
-    final requestUrl = "https://taxinetghana.xyz/user_read_notifications/$id/";
-    final myLink = Uri.parse(requestUrl);
-    final response = await http.put(myLink, headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      'Accept': 'application/json',
-      "Authorization": "Token $uToken"
-    }, body: {
-      "notification_trigger": "Not Triggered",
-    });
-    if (response.statusCode == 200) {}
-  }
-
-  updateReadNotification(int id) async {
-    final requestUrl = "https://taxinetghana.xyz/user_read_notifications/$id/";
-    final myLink = Uri.parse(requestUrl);
-    final response = await http.put(myLink, headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      'Accept': 'application/json',
-      "Authorization": "Token $uToken"
-    }, body: {
-      "read": "Read",
-    });
-    if (response.statusCode == 200) {}
-  }
-
-  Future<void> fetchRideDetail(String rideId) async {
-    final detailRideUrl = "https://taxinetghana.xyz/ride_requests/$rideId";
-    final myLink = Uri.parse(detailRideUrl);
-    http.Response response = await http.get(myLink, headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "Authorization": "Token $uToken"
-    });
-    if (response.statusCode == 200) {
-      final codeUnits = response.body;
-      var jsonData = jsonDecode(codeUnits);
-      passengerPickUp = jsonData['pick_up'];
-      passengerPickUpPlaceId = jsonData['passengers_pick_up_place_id'];
-    } else {
-      Get.snackbar("Sorry", "please check your internet connection");
-    }
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    destinationFocus = FocusNode();
-    _tabController = TabController(length: 4, vsync: this);
-    final appState = Provider.of<AppState>(context, listen: false);
-    if (storage.read("userToken") != null) {
-      uToken = storage.read("userToken");
-    }
-
-    appState.getPassengersSearchedDestinations(uToken);
-    appState.getDriversUpdatedLocations(uToken);
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      appState.getPassengersSearchedDestinations(uToken);
-    });
-
-    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      getAllTriggeredNotifications(uToken);
-      getAllUnReadNotifications(uToken);
-      for (var i in triggered) {
-        localNotificationManager.showAcceptedRideNotification(
-            i['notification_title'], i['notification_message']);
-        localNotificationManager.showRejectedRideNotification(
-            i['notification_title'], i['notification_message']);
-        localNotificationManager.showDriverArrivalNotification(
-            i['notification_title'], i['notification_message']);
-        localNotificationManager.showCompletedRideNotification(
-            i['notification_title'], i['notification_message']);
-        localNotificationManager.showBidCompleteNotification(
-            i['notification_title'], i['notification_message']);
-      }
-      for (var i in notRead) {
-        if (i['notification_title'] == "Ride was accepted" &&
-            i['read'] == "Not Read") {
-          passengersPickUP = i['passengers_lat'];
-          passengersPickUpId = i['passengers_lng'];
-          Get.to(() => BiddingPage(
-              rideId: i['ride_id'], driver: i['notification_from'].toString()));
-          updateReadNotification(i['id']);
-          setState(() {
-            driver = i['notification_from'].toString();
-          });
-          fetchRideDetail(i['ride_id']);
-        }
-        if (i['notification_title'] == "Bidding Accepted" &&
-            i['read'] == "Not Read") {
-          Get.to(() => DriverOnRoute(
-              rideId: i['ride_id'],
-              driver: i['notification_from'].toString(),
-              driversLat: i['drivers_lat'],
-              driversLng: i['drivers_lng'],
-              passengers_pickup: i['passengers_pickup'],
-              pick_up_place_id: i['pick_up_place_id']));
-          updateReadNotification(i['id']);
-        }
-      }
-    });
-
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      for (var e in triggered) {
-        unTriggerNotifications(e["id"]);
-      }
-    });
-    localNotificationManager
-        .setOnAcceptedRideNotificationReceive(onRideAcceptedNotification);
-    localNotificationManager
-        .setOnAcceptedRideNotificationClick(onRideAcceptedNotificationClick);
-    localNotificationManager
-        .setOnRejectedRideNotificationReceive(onRideRejectedNotification);
-    localNotificationManager
-        .setOnRejectedRideNotificationClick(onRideRejectedNotificationClick);
-    localNotificationManager
-        .setOnDriverArrivalNotificationReceive(onRideDriverArrivalNotification);
-    localNotificationManager.setOnDriverArrivalNotificationClick(
-        onRideDriverArrivalNotificationClick);
-    localNotificationManager
-        .setOnCompletedRideNotificationReceive(onRideCompletedNotification);
-    localNotificationManager
-        .setOnCompletedRideNotificationClick(onRideCompletedNotificationClick);
-    localNotificationManager
-        .setOnBidCompleteNotificationReceive(onBidCompletedNotification);
-    localNotificationManager
-        .setOnBidCompleteNotificationClick(onBidCompletedNotificationClick);
-    super.initState();
-  }
-
-  onRideAcceptedNotification(ReceiveNotification notification) {}
-
-  onRideAcceptedNotificationClick(String payload) {}
-
-  onRideRejectedNotification(ReceiveNotification notification) {}
-
-  onRideRejectedNotificationClick(String payload) {}
-
-  onRideDriverArrivalNotification(ReceiveNotification notification) {}
-
-  onRideDriverArrivalNotificationClick(String payload) {}
-
-  onRideCompletedNotification(ReceiveNotification notification) {}
-
-  onRideCompletedNotificationClick(String payload) {}
-
-  onBidCompletedNotification(ReceiveNotification notification) {}
-
-  onBidCompletedNotificationClick(String payload) {}
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: TabBarView(
-        controller: _tabController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: const [RequestRide(), Rides(), Notifications(), Profile()],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.access_time_sharp), label: "Rides"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.notifications), label: "Notifications"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
-        unselectedItemColor: Colors.white54,
-        selectedItemColor: Colors.white,
-        backgroundColor: Colors.black,
-        type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: const TextStyle(fontSize: 14),
-        showSelectedLabels: true,
-        currentIndex: selectedIndex,
-        onTap: onTabClicked,
-      ),
+    Size size = MediaQuery.of(context).size;
+    return SafeArea(
+        child: Scaffold(
+          // backgroundColor: backgroundColor,
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 30,),
+                Stack(
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height:30),
+                        const Center(
+                          child: Text("Schedules",style:TextStyle(fontWeight: FontWeight.bold,fontSize: 25,color: defaultTextColor2),)
+                        ),
+                        const SizedBox(height: 10,),
+                        Padding(
+                          padding: const EdgeInsets.all(18.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: (){
+                                    showMaterialModalBottomSheet(
+                                      context: context,
+                                      isDismissible: true,
+                                      shape: const RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius.vertical(
+                                              top: Radius.circular(
+                                                  25.0))),
+                                      bounce: true,
+                                      builder: (context) => SingleChildScrollView(
+                                        controller: ModalScrollController.of(context),
+                                        child: Column(
+                                          children: [
+                                            SizedBox(
+                                              height: 600,
+                                              child:  ListView.builder(
+                                                  itemCount: scheduleController.allSchedules != null ? scheduleController.allSchedules.length : 0,
+                                                  itemBuilder: (context,index){
+                                                    items = scheduleController.allSchedules[index];
+                                                    return Padding(
+                                                      padding: const EdgeInsets.only(left: 10, right: 10,),
+                                                      child: SlideInUp(
+                                                        animate: true,
+                                                        child: Card(
+                                                            elevation: 12,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.circular(12),
+                                                            ),
+                                                            child: ListTile(
+                                                              onTap: (){
+                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.allSchedules[index]['slug'],title:scheduleController.allSchedules[index]['schedule_title']));
+                                                                // Navigator.pop(context);
+                                                              },
+                                                                leading: const Icon(Icons.access_time_filled),
+                                                                title: Text(items['schedule_title'],style:const TextStyle(fontWeight: FontWeight.bold)),
+                                                                subtitle: Padding(
+                                                                  padding: const EdgeInsets.only(top:10.0),
+                                                                  child: Text(items['date_scheduled']),
+                                                                )
+                                                            )
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                              )
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      color: greyBack,
+                                      height: 85,
+                                      width: 200,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                const Icon(FontAwesomeIcons.list,color: greenBack,),
+                                                Text("${scheduleController.allSchedules.length}",style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: pearl),)
+                                              ],
+                                            ),
+                                            const SizedBox(height: 10,),
+                                            const Text("All",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: pearl),)
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 20,),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    showMaterialModalBottomSheet(
+                                      context: context,
+                                      isDismissible: true,
+                                      shape: const RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius.vertical(
+                                              top: Radius.circular(
+                                                  25.0))),
+                                      bounce: true,
+                                      builder: (context) => SingleChildScrollView(
+                                        controller: ModalScrollController.of(context),
+                                        child: SizedBox(
+                                            height: 600,
+                                            child: ListView.builder(
+                                                itemCount: scheduleController.activeSchedules != null ? scheduleController.activeSchedules.length : 0,
+                                                itemBuilder: (context,index){
+                                                  items = scheduleController.activeSchedules[index];
+                                                  return Padding(
+                                                    padding: const EdgeInsets.only(left: 10, right: 10,),
+                                                    child: SlideInUp(
+                                                      animate: true,
+                                                      child: Card(
+                                                          elevation: 12,
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.circular(12),
+                                                          ),
+                                                          child: ListTile(
+                                                              onTap: (){
+                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.activeSchedules[index]['slug'],title:scheduleController.activeSchedules[index]['schedule_title']));
+                                                              },
+                                                              leading: const Icon(Icons.access_time_filled),
+                                                              title: Text(items['schedule_title'],style:const TextStyle(fontWeight: FontWeight.bold)),
+                                                              subtitle: Padding(
+                                                                padding: const EdgeInsets.only(top:10.0),
+                                                                child: Text(items['date_scheduled']),
+                                                              )
+                                                          )
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                            )
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Container(
+                                      color: greyBack,
+                                      height: 85,
+                                      width: 200,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                const Icon(FontAwesomeIcons.fire,color: primaryColor,),
+                                                Text("${scheduleController.activeSchedules.length}",style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: pearl),)
+                                              ],
+                                            ),
+                                            const SizedBox(height: 10,),
+                                            const Text("Active",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: pearl),)
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 10,),
+                        // Padding(
+                        //   padding: const EdgeInsets.all(18.0),
+                        //   child: Row(
+                        //     children: [
+                        //       Expanded(
+                        //         child: InkWell(
+                        //           splashColor: primaryColor,
+                        //           onTap: (){
+                        //             Get.to(()=> Notifications());
+                        //           },
+                        //           child: ClipRRect(
+                        //             borderRadius: BorderRadius.circular(12),
+                        //             child: Container(
+                        //               color: greyBack,
+                        //               height: 85,
+                        //               width: 200,
+                        //               child: Padding(
+                        //                 padding: const EdgeInsets.all(8.0),
+                        //                 child: Column(
+                        //                   children: [
+                        //                     Row(
+                        //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //                       children: const [
+                        //                         Icon(FontAwesomeIcons.bell,color: orangeBack,),
+                        //                         Text("0",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: Colors.grey),)
+                        //                       ],
+                        //                     ),
+                        //                     const SizedBox(height: 10,),
+                        //                     const Text("Notifications",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: Colors.grey),)
+                        //                   ],
+                        //                 ),
+                        //               ),
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       ),
+                        //       const SizedBox(width: 20,),
+                        //       Expanded(
+                        //         child: InkWell(
+                        //           splashColor: primaryColor,
+                        //           onTap: (){
+                        //             Get.to(()=> const Profile());
+                        //           },
+                        //           child: ClipRRect(
+                        //             borderRadius: BorderRadius.circular(12),
+                        //             child: Container(
+                        //               color: greyBack,
+                        //               height: 85,
+                        //               width: 200,
+                        //               child: Padding(
+                        //                 padding: const EdgeInsets.all(8.0),
+                        //                 child: Column(
+                        //                   children: [
+                        //                     Row(
+                        //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        //                       children: const [
+                        //                         Icon(FontAwesomeIcons.user,color: purpleBack,),
+                        //                       ],
+                        //                     ),
+                        //                     const SizedBox(height: 10,),
+                        //                     const Text("Profile",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: Colors.grey),)
+                        //                   ],
+                        //                 ),
+                        //               ),
+                        //             ),
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // ),
+                      ],
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        ),
+
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
@@ -6,11 +7,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:taxinet/passenger/home/passenger_home.dart';
 
+import '../constants/app_colors.dart';
+import '../views/bottomnavigationbar.dart';
+
 class MyLoginController extends GetxController{
   static MyLoginController get to => Get.find<MyLoginController>();
   final storage = GetStorage();
   var username = "";
   final password = "";
+  String userVerified = "Not Verified";
 
   late List allPassengers = [];
   late List passengerUserNames = [];
@@ -40,8 +45,9 @@ class MyLoginController extends GetxController{
         update();
       }
     } catch (e) {
-      Get.snackbar("Sorry",
-          "something happened or please check your internet connection");
+      if (kDebugMode) {
+        print(e.toString());
+      }
     }
     finally{
       isLoading = false;
@@ -60,26 +66,26 @@ class MyLoginController extends GetxController{
       final resBody = response.body;
       var jsonData = jsonDecode(resBody);
       var userToken = jsonData['auth_token'];
+      var userId = jsonData['user'];
       storage.write("username", uname);
       storage.write("userToken", userToken);
       storage.write("userType", "Passenger");
+      storage.write("verified", userVerified);
+      storage.write("userid", userId);
       username = uname;
       update();
 
-      hasErrors = false;
       if (passengerUserNames.contains(uname)) {
-        Timer(const Duration(seconds: 5), () =>
-            Get.offAll(() => const PassengerHome()));
+        Timer(const Duration(seconds: 1), () =>
+            Get.offAll(() => const MyBottomNavigationBar()));
       }
       else {
-        hasErrors = true;
-        Get.snackbar(
-            "Error 😢", "You are not a passenger or invalid credentials provided",
-            colorText: Colors.white,
+
+        Get.snackbar("Sorry 😢", response.body,
+            duration: const Duration(seconds: 5),
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 8)
-        );
+            colorText: defaultTextColor1);
       }
     }
   }

@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:taxinet/constants/app_colors.dart';
 import 'package:taxinet/g_controller/registration_controller.dart';
 import 'package:taxinet/views/login/loginview.dart';
+import 'package:taxinet/views/login/newlogin.dart';
 import 'package:taxinet/widgets/backgroundImage.dart';
 
 class Registration extends StatefulWidget {
@@ -125,7 +126,10 @@ class _RegistrationState extends State<Registration> {
                             textInputAction: TextInputAction.next,
                             validator: (value){
                               if(value!.isEmpty){
-                                return "";
+                                return "Enter username";
+                              }
+                              else{
+                                return null;
                               }
                             },
                           ),
@@ -158,7 +162,10 @@ class _RegistrationState extends State<Registration> {
                             textInputAction: TextInputAction.next,
                             validator: (value){
                               if(value!.isEmpty){
-                                return "";
+                                return "Enter email";
+                              }
+                              else{
+                                return null;
                               }
                             },
                           ),
@@ -191,7 +198,10 @@ class _RegistrationState extends State<Registration> {
                             textInputAction: TextInputAction.next,
                             validator: (value){
                               if(value!.isEmpty){
-                                return "";
+                                return "Enter full name";
+                              }
+                              else{
+                                return null;
                               }
                             },
                           ),
@@ -224,7 +234,13 @@ class _RegistrationState extends State<Registration> {
                             textInputAction: TextInputAction.next,
                             validator: (value){
                               if(value!.isEmpty){
-                                return "";
+                                return "Enter phone number";
+                              }
+                              if(value.length < 10){
+                                return "Enter a valid phone number";
+                              }
+                              else{
+                                return null;
                               }
                             },
                           ),
@@ -266,7 +282,10 @@ class _RegistrationState extends State<Registration> {
                             obscureText: isObscured,
                             validator: (value){
                               if(value!.isEmpty){
-                                return "";
+                                return "Enter password";
+                              }
+                              else{
+                                return null;
                               }
                             },
                           ),
@@ -308,7 +327,10 @@ class _RegistrationState extends State<Registration> {
                             obscureText: isObscured,
                             validator: (value){
                               if(value!.isEmpty){
-                                return "";
+                                return "confirm password";
+                              }
+                              else{
+                                return null;
                               }
                             },
                           ),
@@ -325,32 +347,32 @@ class _RegistrationState extends State<Registration> {
                         child: RawMaterialButton(
                           onPressed: () {
 
-                            if (!_formKey.currentState!.validate()) {
+                            if (_formKey.currentState!.validate()) {
+                              registerData.registerUser(_usernameController.text.trim(),_emailController.text.trim(),_fullNameController.text.trim(),_phoneNumberController.text.trim(), _passwordController.text.trim(),_rePasswordController.text.trim());
+
+                            } else {
+                              // Get.defaultDialog(
+                              //     title: "",
+                              //     radius: 20,
+                              //     backgroundColor: Colors.black54,
+                              //     barrierDismissible: false,
+                              //     content: Row(
+                              //       children: const [
+                              //         Expanded(child: Center(child: CircularProgressIndicator.adaptive(
+                              //           strokeWidth: 5,
+                              //           backgroundColor: primaryColor,
+                              //           valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+                              //         ))),
+                              //         Expanded(child: Text("Processing",style: TextStyle(color: Colors.white),))
+                              //       ],
+                              //     )
+                              // );
                               Get.snackbar("Error", "Something went wrong,check form",
                                   colorText: defaultTextColor1,
                                   snackPosition: SnackPosition.BOTTOM,
                                   backgroundColor: Colors.red
                               );
-
                               return;
-                            } else {
-                              Get.defaultDialog(
-                                  title: "",
-                                  radius: 20,
-                                  backgroundColor: Colors.black54,
-                                  barrierDismissible: false,
-                                  content: Row(
-                                    children: const [
-                                      Expanded(child: Center(child: CircularProgressIndicator.adaptive(
-                                        strokeWidth: 5,
-                                        backgroundColor: primaryColor,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
-                                      ))),
-                                      Expanded(child: Text("Processing",style: TextStyle(color: Colors.white),))
-                                    ],
-                                  )
-                              );
-                              registerData.registerUser(_usernameController.text.trim(),_emailController.text.trim(),_fullNameController.text.trim(),_phoneNumberController.text.trim(), _passwordController.text.trim(),_rePasswordController.text.trim());
                             }
                           },
                           shape: RoundedRectangleBorder(
@@ -374,7 +396,7 @@ class _RegistrationState extends State<Registration> {
                       ElevatedButton(
                         child: const Text("Login",style: TextStyle(fontWeight: FontWeight.bold,color: defaultTextColor1),),
                         onPressed: (){
-                          Get.to(()=> const LoginView());
+                          Get.to(()=> const NewLogin());
                         },
                       ),
                       const SizedBox(height: 20,),
