@@ -13,7 +13,7 @@ class MapController extends GetxController{
   late String myLocationName = "";
   late String dPlaceId = "";
   bool isLoading = true;
-  String apiKey = "AIzaSyCJGvy6wsW0rAOIPjMlSw7xxwMzkvTv7Zw";
+  String apiKey = "";
   String pickUpLocation = "";
   String dropOffLocation = "";
 
