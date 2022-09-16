@@ -10,15 +10,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:get/get_navigation/src/snackbar/snackbar.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
 
 import 'package:taxinet/constants/app_colors.dart';
 
 import '../views/bottomnavigationbar.dart';
+import 'login_controller.dart';
 
 class UserController extends GetxController {
+  final myLoginController = MyLoginController.to;
   final storage = GetStorage();
   var username = "";
   String uToken = "";
@@ -34,20 +35,28 @@ class UserController extends GetxController {
   String frontGhanaCard = "";
   String backGhanaCard = "";
   String referral = "";
+  String uniqueCode = "";
   late bool verified;
   bool isVerified = false;
   late String updateUserName;
   late String updateEmail;
   late String updatePhone;
-  bool isUpdating = false;
+  bool isUpdating = true;
   var dio = Dio();
   bool hasUploadedFrontCard = false;
   bool hasUploadedBackCard = false;
 
   late List profileDetails = [];
-  late List passengerUserNames = [];
+
   late List allUsers = [];
   late List phoneNumbers = [];
+  late List driversUniqueCodes = [];
+  late List allDrivers = [];
+  late List driversNames = [];
+  late List passengerNames = [];
+  late List passengersUniqueCodes = [];
+  late List allPassengers = [];
+
 
   bool isLoading = true;
   bool isOpened = false;
@@ -66,13 +75,18 @@ class UserController extends GetxController {
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
-    getUserProfile();
-    getAllUsers();
-    _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
-      getUserProfile();
-      getAllUsers();
-      update();
-    });
+    // getUserProfile();
+    // getAllUsers();
+    // getAllDrivers();
+    // getAllPassengers();
+    //
+    // _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
+    //   getUserProfile();
+    //   getAllUsers();
+    //   update();
+    //   getAllDrivers();
+    //   getAllPassengers();
+    // });
   }
 
   File? profileImageUpload;
@@ -319,14 +333,15 @@ class UserController extends GetxController {
     }
   }
 
-  Future<void> getUserProfile() async {
+  Future<void> getUserProfile(String token) async {
     try {
       isLoading = true;
+      update();
       const profileLink = "https://taxinetghana.xyz/passenger-profile";
       var link = Uri.parse(profileLink);
       http.Response response = await http.get(link, headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": "Token $uToken"
+        "Authorization": "Token $token"
       });
       if (response.statusCode == 200) {
         var jsonData = jsonDecode(response.body);
@@ -343,8 +358,9 @@ class UserController extends GetxController {
           backGhanaCard = i['get_back_side_ghana_card'];
           referral = i['referral'];
           verified = i['verified'];
-          passengerProfileId = i['id'].toString();
+          passengerProfileId = i['user'].toString();
           passengerUsername = i['username'].toString();
+          uniqueCode = i['unique_code'];
         }
         update();
         storage.write("verified", "Verified");
@@ -354,7 +370,9 @@ class UserController extends GetxController {
         storage.write("passenger_username", passengerUsername);
       }
       else{
-        print(response.body);
+        if (kDebugMode) {
+          print(response.body);
+        }
       }
     } catch (e) {
       if (kDebugMode) {
@@ -362,17 +380,19 @@ class UserController extends GetxController {
       }
     } finally {
       isLoading = false;
+      update();
     }
   }
 
-  Future<void> getAllUsers() async {
+
+  Future<void> getAllUsers(String token) async {
     try {
       isLoading = true;
       const profileLink = "https://taxinetghana.xyz/users/";
       var link = Uri.parse(profileLink);
       http.Response response = await http.get(link, headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": "Token $uToken"
+        "Authorization": "Token $token"
       });
       if (response.statusCode == 200) {
         var jsonData = jsonDecode(response.body);
@@ -383,6 +403,78 @@ class UserController extends GetxController {
          }
         }
         update();
+      }
+      else{
+        if (kDebugMode) {
+          print(response.body);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print(e.toString());
+      }
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  Future<void> getAllDrivers() async {
+    try {
+      isLoading = true;
+      const profileLink = "https://taxinetghana.xyz/all_drivers_profile/";
+      var link = Uri.parse(profileLink);
+      http.Response response = await http.get(link, headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      });
+      if (response.statusCode == 200) {
+        var jsonData = jsonDecode(response.body);
+        allDrivers = jsonData;
+        for (var i in allDrivers) {
+          if(!driversUniqueCodes.contains(i['unique_code'])){
+            driversUniqueCodes.add(i['unique_code']);
+          }
+          if(!driversNames.contains(i['get_drivers_full_name'])){
+            driversNames.add(i['get_drivers_full_name']);
+          }
+        }
+        update();
+
+      }
+      else{
+        if (kDebugMode) {
+          print(response.body);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print(e.toString());
+      }
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  Future<void> getAllPassengers() async {
+    try {
+      isLoading = true;
+      const profileLink = "https://taxinetghana.xyz/all_passengers_profile/";
+      var link = Uri.parse(profileLink);
+      http.Response response = await http.get(link, headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      });
+      if (response.statusCode == 200) {
+        var jsonData = jsonDecode(response.body);
+        allPassengers = jsonData;
+        for (var i in allPassengers) {
+          if(!passengersUniqueCodes.contains(i['unique_code'])){
+            passengersUniqueCodes.add(i['unique_code']);
+          }
+          if(!passengerNames.contains(i['get_passengers_full_name'])){
+            passengerNames.add(i['get_passengers_full_name']);
+          }
+        }
+        update();
+
       }
       else{
         if (kDebugMode) {
@@ -432,37 +524,5 @@ class UserController extends GetxController {
     }
   }
 
-  updatePassengerProfile(String referral) async {
-    const updateUrl = "https://taxinetghana.xyz/update_passenger_profile/";
-    final myUrl = Uri.parse(updateUrl);
-    http.Response response = await http.put(
-      myUrl,
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": "Token $uToken"
-      },
-      body: {
-        // "name_on_ghana_card": nameOnGCard,
-        // "next_of_kin": nextOfKin,
-        // "next_of_kin_number": nextOfKinNumber,
-        "referral": referral
-      },
-    );
-    if (response.statusCode == 200) {
-      Get.snackbar("Hurray 😀", "referral added successfully",
-          duration: const Duration(seconds: 5),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: primaryColor,
-          colorText: defaultTextColor1);
-      Get.offAll(() => const MyBottomNavigationBar());
-      update();
-      isUpdating = false;
-    } else {
-      Get.snackbar("Sorry 😢", "something went wrong,please try again later",
-          duration: const Duration(seconds: 5),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: defaultTextColor1);
-    }
-  }
+
 }

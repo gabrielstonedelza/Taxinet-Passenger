@@ -37,7 +37,7 @@ class PassengerHome extends StatelessWidget {
     Size size = MediaQuery.of(context).size;
     return SafeArea(
         child: Scaffold(
-          // backgroundColor: backgroundColor,
+          backgroundColor: primaryColor,
           body: SingleChildScrollView(
             child: Column(
               children: [

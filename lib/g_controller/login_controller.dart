@@ -16,6 +16,8 @@ class MyLoginController extends GetxController{
   var username = "";
   final password = "";
   String userVerified = "Not Verified";
+  String loggedInUserId = "";
+  String deToken = "";
 
   late List allPassengers = [];
   late List passengerUserNames = [];
@@ -66,7 +68,9 @@ class MyLoginController extends GetxController{
       final resBody = response.body;
       var jsonData = jsonDecode(resBody);
       var userToken = jsonData['auth_token'];
-      var userId = jsonData['user'];
+      var userId = jsonData['id'];
+      loggedInUserId = userId.toString();
+      deToken = userToken;
       storage.write("username", uname);
       storage.write("userToken", userToken);
       storage.write("userType", "Passenger");

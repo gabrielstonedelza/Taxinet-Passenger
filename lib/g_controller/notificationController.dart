@@ -6,7 +6,10 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 
+import 'login_controller.dart';
+
 class NotificationController extends GetxController {
+  final myLoginController = MyLoginController.to;
   static NotificationController get to => Get.find<NotificationController>();
   late List allNotifications = [];
   bool isLoading = true;
@@ -26,29 +29,40 @@ class NotificationController extends GetxController {
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
-    getAllNotifications();
-    _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
-      getAllNotifications();
-      update();
-    });
+    // getAllNotifications();
+    // _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
+    //   getAllNotifications();
+    //   update();
+    // });
   }
 
-  Future<void> getAllNotifications() async {
-    const url = "https://taxinetghana.xyz/passengers_notifications/";
-    var myLink = Uri.parse(url);
-    final response =
-        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
-    if (response.statusCode == 200) {
-      final codeUnits = response.body.codeUnits;
-      var jsonData = const Utf8Decoder().convert(codeUnits);
-      allNotifications = json.decode(jsonData);
-      if (kDebugMode) {
-        // print(response.body);
+  Future<void> getAllNotifications(String token) async {
+    try{
+      isLoading = true;
+      const url = "https://taxinetghana.xyz/passengers_notifications/";
+      var myLink = Uri.parse(url);
+      final response =
+      await http.get(myLink, headers: {"Authorization": "Token $token"});
+      if (response.statusCode == 200) {
+        final codeUnits = response.body.codeUnits;
+        var jsonData = const Utf8Decoder().convert(codeUnits);
+        allNotifications = json.decode(jsonData);
+        if (kDebugMode) {
+          // print(response.body);
+        }
+      } else {
+        if (kDebugMode) {
+          // print(response.body);
+        }
       }
-    } else {
+    }
+    catch (e) {
       if (kDebugMode) {
-        // print(response.body);
+        print(e.toString());
       }
+    }
+    finally {
+      isLoading = false;
     }
   }
 }

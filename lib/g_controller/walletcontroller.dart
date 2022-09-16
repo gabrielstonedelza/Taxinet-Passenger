@@ -13,6 +13,7 @@ class WalletController extends GetxController{
   String wallet = "00";
   List walletDetails = [];
   late Timer _timer;
+  bool canBook = false;
 
 
   @override
@@ -25,26 +26,33 @@ class WalletController extends GetxController{
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
-    getUserWallet();
-    _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
-      getUserWallet();
-      update();
-    });
+    // getUserWallet();
+    // _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
+    //   getUserWallet();
+    //   update();
+    // });
   }
-  Future<void> getUserWallet() async {
+  Future<void> getUserWallet(String token) async {
     try {
       isLoading = true;
-      const walletUrl = "https://taxinetghana.xyz/get_my_wallet/";
+      update();
+      const walletUrl = "https://taxinetghana.xyz/get_user_wallet/";
       var link = Uri.parse(walletUrl);
       http.Response response = await http.get(link, headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": "Token $uToken"
+        "Authorization": "Token $token"
       });
       if (response.statusCode == 200) {
         var jsonData = jsonDecode(response.body);
         walletDetails = jsonData;
         for (var i in walletDetails) {
           wallet = i['amount'];
+        }
+        if(double.parse(wallet) > 0){
+          canBook = true;
+        }
+        else{
+          canBook = false;
         }
         update();
       }
@@ -54,6 +62,7 @@ class WalletController extends GetxController{
       }
     } finally {
       isLoading = false;
+      update();
     }
   }
 

@@ -5,7 +5,6 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
    <application
         android:label="taxinet"
         android:name="${applicationName}"
@@ -41,6 +40,6 @@
             android:name="flutterEmbedding"
             android:value="2" />
        <meta-data android:name="com.google.android.geo.API_KEY"
-                  android:value="AIzaSyCVohvMiszUGO-kXyXVAPA2S7eiG890K4I"/>
+                  android:value="AIzaSyCJGvy6wsW0rAOIPjMlSw7xxwMzkvTv7Zw"/>
     </application>
 </manifest>

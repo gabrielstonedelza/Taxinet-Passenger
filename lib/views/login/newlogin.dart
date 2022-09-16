@@ -36,7 +36,7 @@ class _NewLoginState extends State<NewLogin> {
     setState(() {
       isPosting = true;
     });
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 5));
     setState(() {
       isPosting = false;
     });
@@ -134,7 +134,7 @@ class _NewLoginState extends State<NewLogin> {
                     // cursorColor: Colors.black,
                     // style: const TextStyle(color: Colors.black),
                     keyboardType: TextInputType.text,
-                    textInputAction: TextInputAction.done,
+                    textInputAction: TextInputAction.next,
                     validator: (value){
                       if(value!.isEmpty){
                         return "Enter username";
@@ -213,9 +213,6 @@ class _NewLoginState extends State<NewLogin> {
                   ):   RawMaterialButton(
                     onPressed: () {
                       _startPosting();
-                      setState(() {
-                        isPosting = true;
-                      });
                       if (_formKey.currentState!.validate()) {
                         if(username == ""){
                           loginData.loginUser(_usernameController.text.trim(), _passwordController.text.trim());

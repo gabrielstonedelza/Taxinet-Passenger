@@ -45,6 +45,16 @@ dependencies:
   fab_circular_menu:
   water_drop_nav_bar:
   loader_skeleton: ^0.0.4
+  flutter_polyline_points: ^1.0.0
+  google_maps_flutter: ^2.2.0
+  location:
+  geolocator:
+  geocoding:
+  shimmer: ^2.0.0
+  pull_to_refresh: ^2.0.0
+
+
+
 
 
 

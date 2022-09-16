@@ -12,6 +12,7 @@ import '../constants/app_colors.dart';
 import '../controllers/notifications/localnotification_manager.dart';
 import '../g_controller/userController.dart';
 import '../g_controller/walletcontroller.dart';
+import '../mapscontroller.dart';
 import '../passenger/home/mycarousel.dart';
 import '../passenger/home/pages/gettickets.dart';
 import '../passenger/home/pages/notifications.dart';
@@ -53,30 +54,7 @@ class _HomePageState extends State<HomePage> {
   late List allNots = [];
   late Timer _timer;
   bool canSchedule = false;
-  List dataListNames = [
-    "Taxinet Ride",
-    "Taxinet Luxury",
-    "Taxinet Truck",
-    "Taxinet Delivery",
-    "Taxinet Bus",
-    "Taxinet Ticktes",
-  ];
-  List dataListImages = [
-    "assets/images/taxinet.jpg",
-    "assets/images/suv.png",
-    "assets/images/truck.jpg",
-    "assets/images/delivery.jpg",
-    "assets/images/bus.jpg",
-    "assets/images/ticket.jpg",
-  ];
-  List<Widget> dataListPages = [
-    const ScheduleRide(),
-    const ScheduleLuxury(),
-    const ScheduleTruck(),
-    const ScheduleDeliver(),
-    const ScheduleBus(),
-    const TaxinetTicket()
-  ];
+
 
   Future<void> getAllTriggeredNotifications() async {
     const url = "https://fnetghana.xyz/get_passengers_triggered_notifications/";
@@ -201,10 +179,13 @@ class _HomePageState extends State<HomePage> {
           duration: const Duration(seconds: 5));
     }
   }
+  final MapController _mapController = Get.find();
 
   @override
   void initState(){
     super.initState();
+    _mapController.getUserLocation();
+
     _pageController = PageController(initialPage: _currentPage,viewportFraction: 0.8);
     if(double.parse(walletController.wallet) == 0.00){
       setState(() {
@@ -289,6 +270,18 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
+             Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.location_on),
+                    GetBuilder<MapController>(builder: (controller){
+                      return Text(_mapController.myLocationName,
+                      style: const TextStyle(fontWeight: FontWeight.bold,color: secondaryColor,fontSize: 15));
+    })
+                  ],
+                )),
             const SizedBox(height: 20),
             const Center(
                 child: Text("Wallet",

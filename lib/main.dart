@@ -14,6 +14,7 @@ import 'g_controller/login_controller.dart';
 import 'g_controller/ridesController.dart';
 import 'g_controller/schedulescontroller.dart';
 import 'g_controller/walletcontroller.dart';
+import 'mapscontroller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,7 @@ void main() async {
   Get.put(UserController());
   Get.put(WalletController());
   Get.put(ScheduleController());
+  Get.put(MapController());
   runApp(const MyApp());
 }
 

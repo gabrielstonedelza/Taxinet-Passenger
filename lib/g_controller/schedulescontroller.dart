@@ -5,7 +5,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:get/get.dart';
 
+import 'login_controller.dart';
+
 class ScheduleController extends GetxController{
+  final myLoginController = MyLoginController.to;
   bool isLoading = true;
   final storage = GetStorage();
   var username = "";
@@ -41,13 +44,13 @@ class ScheduleController extends GetxController{
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
-    getActiveSchedules();
-    getAllSchedules();
-    _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
-      getActiveSchedules();
-      getAllSchedules();
-      update();
-    });
+    // getActiveSchedules();
+    // getAllSchedules();
+    // _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
+    //   getActiveSchedules();
+    //   getAllSchedules();
+    //   update();
+    // });
   }
   Future<void> getDetailSchedule(String slug) async {
     try {
@@ -92,21 +95,18 @@ class ScheduleController extends GetxController{
     }
   }
 //
-  Future<void> getActiveSchedules() async {
+  Future<void> getActiveSchedules(String token) async {
     try {
       isLoading = true;
       const walletUrl = "https://taxinetghana.xyz/get_my_active_schedules/";
       var link = Uri.parse(walletUrl);
       http.Response response = await http.get(link, headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": "Token $uToken"
+        "Authorization": "Token $token"
       });
       if (response.statusCode == 200) {
         var jsonData = jsonDecode(response.body);
         activeSchedules.assignAll(jsonData);
-        // if (kDebugMode) {
-        //   print(response.body);
-        // }
         update();
       }
     } catch (e) {
@@ -118,21 +118,18 @@ class ScheduleController extends GetxController{
     }
   }
 
-  Future<void> getAllSchedules() async {
+  Future<void> getAllSchedules(String token) async {
     try {
       isLoading = true;
       const walletUrl = "https://taxinetghana.xyz/get_all_my_ride_requests/";
       var link = Uri.parse(walletUrl);
       http.Response response = await http.get(link, headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": "Token $uToken"
+        "Authorization": "Token $token"
       });
       if (response.statusCode == 200) {
         var jsonData = jsonDecode(response.body);
         allSchedules.assignAll(jsonData);
-        // if (kDebugMode) {
-        //   print(response.body);
-        // }
         update();
       }
     } catch (e) {

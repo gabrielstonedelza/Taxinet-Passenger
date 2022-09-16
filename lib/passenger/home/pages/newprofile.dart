@@ -47,6 +47,7 @@ class _MyProfileState extends State<MyProfile> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+          backgroundColor: primaryColor,
         body: Padding(
           padding: const EdgeInsets.all(8.0),
           child: ListView(

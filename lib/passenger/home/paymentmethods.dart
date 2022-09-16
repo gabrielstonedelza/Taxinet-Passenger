@@ -49,7 +49,7 @@ class _PaymentMethodsState extends State<PaymentMethods> {
                           middleTextStyle: const TextStyle(fontSize: 12),
                           titleStyle: const TextStyle(fontSize: 15),
                           title: "Call Office",
-                          content: const Text("Please kindly call 02444950505 to get your wallet loaded.")
+                          content: const Text("Please kindly call 0244950505 to get your wallet loaded.")
                       );
                     },
                     child: Container(

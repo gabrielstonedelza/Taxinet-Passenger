@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -5,7 +6,11 @@ import 'package:provider/provider.dart';
 import 'package:taxinet/passenger/home/pages/completeset.dart';
 import '../../constants/app_colors.dart';
 import '../../g_controller/userController.dart';
+import '../../mapscontroller.dart';
 import '../../states/schedule_state.dart';
+import 'locateonmap.dart';
+import 'locatepickuponmap.dart';
+import 'package:http/http.dart' as http;
 
 class ScheduleRide extends StatefulWidget {
   const ScheduleRide({Key? key}) : super(key: key);
@@ -40,7 +45,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
 
   late final  TextEditingController _pickUpLocationController = TextEditingController();
 
-  late final  TextEditingController _dropOffLocationController = TextEditingController();
+  late final  TextEditingController _dropOffLocationController =  TextEditingController();
 
   late final  TextEditingController _pickUpTimeController = TextEditingController();
 
@@ -54,9 +59,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
 
   final FocusNode _dropOffLocationFocusNode = FocusNode();
 
-  final FocusNode _pickUpTimeFocusNode = FocusNode();
-
-  final FocusNode _pickUpDateFocusNode = FocusNode();
   var uToken = "";
   final storage = GetStorage();
   var username = "";
@@ -66,12 +68,60 @@ class _ScheduleRideState extends State<ScheduleRide> {
   late DateTime _dateTime;
   TimeOfDay _timeOfDay = const TimeOfDay(hour: 8, minute: 30);
   bool isPosting = false;
+  final MapController _mapController = Get.find();
+
+  scheduleRide() async {
+    const requestUrl = "https://taxinetghana.xyz/request_ride/new/";
+    final myLink = Uri.parse(requestUrl);
+    final response = await http.post(myLink, headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      'Accept': 'application/json',
+      "Authorization": "Token $uToken"
+    }, body: {
+      "schedule_title": _scheduleTitleController.text,
+      "schedule_type": _currentSelectedScheduleType,
+      "schedule_priority": _currentSelectedPriority,
+      "schedule_description": _scheduleDescriptionController.text,
+      "pickup_location": _pickUpLocationController.text,
+      "drop_off_location": _dropOffLocationController.text,
+      "pick_up_time": _pickUpTimeController.text,
+      "start_date": _startDateController.text,
+    });
+    if (response.statusCode == 201) {
+
+      Get.snackbar("Success 😀", "request sent.",
+          duration: const Duration(seconds: 5),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: primaryColor,
+          colorText: defaultTextColor1);
+      setState(() {
+        _scheduleTitleController.text = "";
+        _currentSelectedScheduleType = "Select Schedule Type";
+        _currentSelectedPriority = "Select Schedule Priority";
+        _scheduleDescriptionController.text = "";
+        _pickUpLocationController.text = "";
+        _dropOffLocationController.text = "";
+        _pickUpTimeController.text = "";
+        _startDateController.text = "";
+      });
+    }
+    else{
+      if (kDebugMode) {
+        print(response.body);
+      }
+      Get.snackbar("Sorry 😢", "something went wrong,please try again later.",
+          duration: const Duration(seconds: 5),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: defaultTextColor1);
+    }
+  }
 
   void _startPosting()async{
     setState(() {
       isPosting = true;
     });
-    await Future.delayed(const Duration(seconds: 4));
+    await Future.delayed(const Duration(seconds: 5));
     setState(() {
       isPosting = false;
     });
@@ -125,6 +175,8 @@ class _ScheduleRideState extends State<ScheduleRide> {
                    borderRadius: BorderRadius.circular(10)
                ),
                elevation: 8,
+               fillColor: primaryColor,
+               splashColor: defaultColor,
                child: const Padding(
                  padding: EdgeInsets.all(8.0),
                  child: Text(
@@ -135,8 +187,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
                        color: Colors.white),
                  ),
                ),
-               fillColor: primaryColor,
-               splashColor: defaultColor,
              )
            ],
          ) : Padding(
@@ -157,6 +207,8 @@ class _ScheduleRideState extends State<ScheduleRide> {
                         child: TextFormField(
                           controller: _scheduleTitleController,
                           focusNode: _scheduleTitleFocusNode,
+                          autocorrect: true,
+                          enableSuggestions: true,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                             hintText: "Schedule Title",
@@ -189,6 +241,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
                         padding: const EdgeInsets.only(left: 8.0,right: 10),
                         child: TextFormField(
                           autocorrect: true,
+                          enableSuggestions: true,
                           controller: _scheduleDescriptionController,
                           focusNode: _scheduleDescriptionFocusNode,
                           maxLines: 3,
@@ -274,77 +327,94 @@ class _ScheduleRideState extends State<ScheduleRide> {
                     ),
                   ),
                   const SizedBox(height: 15,),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey, width: 1)),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8.0,right: 10),
-                        child: TextFormField(
-                          autocorrect: true,
-                          controller: _pickUpLocationController,
-                          focusNode: _pickUpLocationFocusNode,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Pick Up Location",
-                            hintStyle: TextStyle(color: defaultTextColor2),
+                  GetBuilder<MapController>(builder: (controller){
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey, width: 1)),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0,right: 10),
+                          child: TextFormField(
+                            readOnly:true,
+                            autocorrect: true,
+                            controller: _pickUpLocationController..text=controller.pickUpLocation,
+                            focusNode: _pickUpLocationFocusNode,
+                            decoration: InputDecoration(
+                              prefixIcon: IconButton(
+                                  onPressed: () async{
+                                    Get.to(() =>  LocatePickUpOnMap(pickUp:"PickUp"));
+                                  },
+                                  icon: const Icon(Icons.location_on,color:Colors.green)
+                              ),
+                              border: InputBorder.none,
+                              hintText: "Pick Up Location",
+                              hintStyle: const TextStyle(color: defaultTextColor2),
+                            ),
+                            cursorColor: defaultTextColor2,
+                            style: const TextStyle(color: defaultTextColor2),
+                            keyboardType: TextInputType.visiblePassword,
+                            textInputAction: TextInputAction.next,
 
+                            validator: (value){
+                              if(value!.isEmpty){
+                                return "Enter Pick Up Location";
+                              }
+                              else{
+                                return null;
+                              }
+                            },
                           ),
-                          cursorColor: defaultTextColor2,
-                          style: const TextStyle(color: defaultTextColor2),
-                          keyboardType: TextInputType.visiblePassword,
-                          textInputAction: TextInputAction.next,
-
-                          validator: (value){
-                            if(value!.isEmpty){
-                              return "Enter Pick Up Location";
-                            }
-                            else{
-                              return null;
-                            }
-                          },
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                   const SizedBox(height: 15,),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey, width: 1)),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8.0,right: 10),
-                        child: TextFormField(
-                          autocorrect: true,
-                          controller: _dropOffLocationController,
-                          focusNode: _dropOffLocationFocusNode,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Drop Off Location",
-                            hintStyle: TextStyle(color: defaultTextColor2),
+                  GetBuilder<MapController>(builder: (controller){
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10.0),
+                      child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey, width: 1)),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0,right: 10),
+                          child: TextFormField(
+                            readOnly:true,
+                            autocorrect: true,
+                            controller: _dropOffLocationController..text=controller.dropOffLocation,
+                            focusNode: _dropOffLocationFocusNode,
+                            decoration: InputDecoration(
+                              prefixIcon: IconButton(
+                                  onPressed: () async{
+                                    Get.to(() => LocateOnMap(dropOff:"DropOff"));
+                                  },
+                                  icon: const Icon(Icons.location_on,color:Colors.red)
+                              ),
+                              border: InputBorder.none,
+                              hintText: "Drop Off Location",
+                              hintStyle: const TextStyle(color: defaultTextColor2),
 
+                            ),
+                            cursorColor: defaultTextColor2,
+                            style: const TextStyle(color: defaultTextColor2),
+                            keyboardType: TextInputType.visiblePassword,
+                            textInputAction: TextInputAction.next,
+
+                            validator: (value){
+                              if(value!.isEmpty){
+                                return "Enter Drop Off Location";
+                              }
+                              else{
+                                return null;
+                              }
+                            },
                           ),
-                          cursorColor: defaultTextColor2,
-                          style: const TextStyle(color: defaultTextColor2),
-                          keyboardType: TextInputType.visiblePassword,
-                          textInputAction: TextInputAction.next,
-
-                          validator: (value){
-                            if(value!.isEmpty){
-                              return "Enter Drop Off Location";
-                            }
-                            else{
-                              return null;
-                            }
-                          },
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                   const SizedBox(height: 15,),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10.0),
@@ -414,7 +484,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
                               });
                             },
                           ),
-                          labelText: "Click on icon to select your pick up time",
+                          labelText: "Click on icon to pick up time",
                           labelStyle: const TextStyle(color: defaultTextColor2),
 
                           focusColor: primaryColor,
@@ -455,7 +525,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
                         });
                         _startPosting();
                         if (_formKey.currentState!.validate()) {
-                          scheduleState.scheduleRide(uToken, _scheduleTitleController.text.trim(), _currentSelectedScheduleType, _currentSelectedPriority, _scheduleDescriptionController.text.trim(), _pickUpLocationController.text.trim(), _dropOffLocationController.text.trim(), _pickUpTimeController.text.trim(), _startDateController.text.trim());
+                          scheduleRide();
 
                         } else {
                           Get.snackbar("Error", "Something went wrong",
@@ -470,6 +540,8 @@ class _ScheduleRideState extends State<ScheduleRide> {
                           borderRadius: BorderRadius.circular(8)
                       ),
                       elevation: 8,
+                      fillColor: primaryColor,
+                      splashColor: defaultColor,
                       child: const Text(
                         "Request",
                         style: TextStyle(
@@ -477,8 +549,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
                             fontSize: 20,
                             color: defaultTextColor2),
                       ),
-                      fillColor: primaryColor,
-                      splashColor: defaultColor,
                     ),
                   ),
                   const SizedBox(height: 25,),

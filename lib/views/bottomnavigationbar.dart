@@ -16,6 +16,7 @@ import '../controllers/notifications/localnotification_manager.dart';
 import '../passenger/home/nointernetconnections.dart';
 import '../passenger/home/pages/newprofile.dart';
 import '../passenger/home/passenger_home.dart';
+import '../passenger/home/payments.dart';
 import 'home.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
@@ -75,7 +76,7 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
             physics: const NeverScrollableScrollPhysics(),
             controller: pageController,
           children: hasInternet ? <Widget>[
-            const HomePage(),
+            const WelcomeOptions(),
             PassengerHome(),
             Notifications(),
             const MyProfile(),
@@ -117,6 +118,7 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
                 filledIcon: Icons.person,
                 outlinedIcon: Icons.person_outline,
               ),
+
             ],
           ),
         ),

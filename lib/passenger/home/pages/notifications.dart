@@ -5,6 +5,8 @@ import 'package:taxinet/constants/app_colors.dart';
 import 'package:taxinet/g_controller/notificationController.dart';
 import '../../../g_controller/userController.dart';
 import '../../../views/bottomnavigationbar.dart';
+import '../../../widgets/shimmers/listshimmer.dart';
+import '../../../widgets/shimmers/shimmerwidget.dart';
 import '../scheduledetail.dart';
 import 'newprofile.dart';
 
@@ -18,82 +20,70 @@ class Notifications extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: notificationController.allNotifications != null ? ListView.builder(
+      appBar: AppBar(
+        title: const Text("Notifications"),
+        backgroundColor:primaryColor,
+
+      ),
+      backgroundColor: primaryColor,
+      body: ListView.builder(
         itemCount: notificationController.allNotifications != null ? notificationController.allNotifications.length :0,
           itemBuilder: (context,index){
           items = notificationController.allNotifications[index];
-          return Column(
-            children: [
-              const SizedBox(height: 10,),
-              SlideInUp(
-                animate: true,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 18,right: 18),
-                  child: Card(
-                    elevation: 10,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child:items['read'] == "Read" ? ListTile(
-                      onTap: (){
-                        if(items['title'] == "Wallet Loaded"){
-                          Get.offAll(() => const MyBottomNavigationBar());
-                        }
-                        if(items['title'] == "New ride assigned"){
-                          Get.to(()=> ScheduleDetail(slug:items[index]['schedule_ride_slug'],title:items[index]['schedule_ride_title']));
-                        }
-                        if(items['title'] == "Wallet Updated"){
-                          Get.offAll(() => const MyBottomNavigationBar());
-                        }
-                        if(items['title'] == "Profile Verified"){
-                          Get.offAll(() => const MyProfile());
-                        }
-                        if(items['title'] == "Wallet Updated"){
-                          Get.offAll(() => const MyBottomNavigationBar());
-                        }
+            return Column(
+              children: [
+                const SizedBox(height: 10,),
+                SlideInUp(
+                  animate: true,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 18,right: 18),
+                    child: notificationController.allNotifications != null ? Card(
+                      elevation: 10,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child:items['read'] == "Read" ? ListTile(
 
-                      },
-                      leading: const CircleAvatar(
-                          backgroundColor: Colors.grey,
-                          foregroundColor: Colors.white,
-                          child: Icon(Icons.notifications)
+                        leading: const CircleAvatar(
+                            backgroundColor: Colors.grey,
+                            foregroundColor: Colors.white,
+                            child: Icon(Icons.notifications)
+                        ),
+                        title: Padding(
+                          padding: const EdgeInsets.only(top: 10, bottom: 10.0),
+                          child: Text(items['notification_title']),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: Text(items['notification_message']),
+                        ),
+                      ) :ListTile(
+                        onTap: (){
+                          Get.offAll(() => const MyBottomNavigationBar());
+                        },
+                        leading: const CircleAvatar(
+                            backgroundColor: primaryColor,
+                            foregroundColor: Colors.white,
+                            child: Icon(Icons.notifications)
+                        ),
+                        title: Padding(
+                          padding: const EdgeInsets.only(top: 10, bottom: 10.0),
+                          child: Text(items['notification_title'],style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: Text(items['notification_message']),
+                        ),
                       ),
-                      title: Padding(
-                        padding: const EdgeInsets.only(top: 10, bottom: 10.0),
-                        child: Text(items['notification_title']),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(bottom: 10.0),
-                        child: Text(items['notification_message']),
-                      ),
-                    ) :ListTile(
-                      onTap: (){
-                        Get.offAll(() => const MyBottomNavigationBar());
-                      },
-                      leading: const CircleAvatar(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          child: Icon(Icons.notifications)
-                      ),
-                      title: Padding(
-                        padding: const EdgeInsets.only(top: 10, bottom: 10.0),
-                        child: Text(items['notification_title'],style: const TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(bottom: 10.0),
-                        child: Text(items['notification_message']),
-                      ),
-                    ),
+                    ) : const ShimmerWidget.rectangular(height: 20),
                   ),
-                ),
-              )
-            ],
-          );
+                )
+              ],
+            );
 
           }
-      ):const Center(
-        child: Text("You have no notifications"),
-      ),
+      )
     );
   }
+
 }

@@ -120,6 +120,24 @@ class _VerifiedProfileState extends State<VerifiedProfile> {
               ),
             ),
             const SizedBox(height: 30),
+
+            ListTile(
+              title: const Padding(
+                padding: EdgeInsets.only(bottom:8.0),
+                child: Text("Unique Code",style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+              subtitle: GetBuilder<UserController>(
+                  builder: (controller) {
+                    return Text(
+                      controller.uniqueCode,
+                      style: const TextStyle(
+
+                          fontSize: 12),
+                    );
+                  }),
+            ),
+            const Divider(),
+            const SizedBox(height: 10),
             ListTile(
               title: const Padding(
                 padding: EdgeInsets.only(bottom:8.0),
