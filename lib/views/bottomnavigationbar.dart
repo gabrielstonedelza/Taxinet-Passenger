@@ -5,8 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:taxinet/passenger/home/pages/notifications.dart';
-import 'package:taxinet/passenger/home/pages/profile.dart';
-import 'package:taxinet/passenger/home/pages/schedules.dart';
+
 import 'package:taxinet/views/welcome_options.dart';
 import 'package:water_drop_nav_bar/water_drop_nav_bar.dart';
 import 'package:get/get.dart';

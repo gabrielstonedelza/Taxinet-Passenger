@@ -4,14 +4,12 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:loader_skeleton/loader_skeleton.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:taxinet/constants/app_colors.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:taxinet/passenger/home/schedule_ride.dart';
 
-import '../constants/changethemebutton.dart';
 import '../controllers/notifications/localnotification_manager.dart';
 import '../g_controller/notificationController.dart';
 import '../g_controller/schedulescontroller.dart';
@@ -207,17 +205,6 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
       scheduleController.getActiveSchedules(uToken);
       });
     super.initState();
-
-
-    // if (double.parse(walletController.wallet) > 00 ) {
-    //   setState(() {
-    //     canSchedule = true;
-    //   });
-    // } else {
-    //   setState(() {
-    //     canSchedule = false;
-    //   });
-    // }
 
     getAllTriggeredNotifications();
     _timer = Timer.periodic(const Duration(seconds: 12), (timer) {

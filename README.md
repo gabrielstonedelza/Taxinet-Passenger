@@ -1,6 +1,6 @@
-# taxinet
+# Taxinet
 
-A new Flutter project.
+A taxinet schduling app for driver.
 
 ## Getting Started
 

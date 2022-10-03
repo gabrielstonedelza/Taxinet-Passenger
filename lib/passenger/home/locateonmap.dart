@@ -38,34 +38,14 @@ class _LocateOnMapState extends State<LocateOnMap> {
               icon:const Icon(Icons.arrow_back,color:defaultTextColor2)
           ),
           actions: [
-            pickedDropOffName != "nothing" ?  RawMaterialButton(
-              onPressed: () {
-                _mapController.setDropOffLocation(pickedDropOffName);
-                // _mapController.dropOffLocation.text = pickedDropOffName;
-                Get.back();
-              },
-              // child: const Text("Send"),
-              shape: RoundedRectangleBorder(
-                  borderRadius:
-                  BorderRadius
-                      .circular(
-                      8)),
-              elevation: 8,
-              fillColor:
-              Colors.green,
-              splashColor:
-              defaultColor,
-              child: const Text(
-                "Okay",
-                style: TextStyle(
-                    fontWeight:
-                    FontWeight
-                        .bold,
-                    fontSize: 15,
-                    color:
-                    defaultTextColor1),
-              ),
-            ) : Container()
+            pickedDropOffName != "nothing" ? TextButton(
+                onPressed: () {
+                  _mapController.setDropOffLocation(pickedDropOffName);
+// _mapController.dropOffLocation.text = pickedDropOffName;
+                  Get.back();
+                },
+                child: const Text("Okay",style: TextStyle(fontWeight: FontWeight.bold))
+            )  : Container()
           ],
         ),
         body: Stack(
@@ -117,3 +97,4 @@ class _LocateOnMapState extends State<LocateOnMap> {
     );
   }
 }
+

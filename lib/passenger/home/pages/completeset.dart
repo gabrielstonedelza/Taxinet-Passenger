@@ -53,7 +53,7 @@ class _CompleteSetUpState extends State<CompleteSetUp> {
       },
     );
     if (response.statusCode == 200) {
-      Get.snackbar("Hurray 😀", "referral added successfully",
+      Get.snackbar("Hurray 😀", "referral added successfully,please wait for at least a minute for this to take effect",
           duration: const Duration(seconds: 5),
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: primaryColor,

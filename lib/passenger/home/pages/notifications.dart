@@ -58,9 +58,9 @@ class Notifications extends StatelessWidget {
                           child: Text(items['notification_message']),
                         ),
                       ) :ListTile(
-                        onTap: (){
-                          Get.offAll(() => const MyBottomNavigationBar());
-                        },
+                        // onTap: (){
+                        //   Get.offAll(() => const MyBottomNavigationBar());
+                        // },
                         leading: const CircleAvatar(
                             backgroundColor: primaryColor,
                             foregroundColor: Colors.white,

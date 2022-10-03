@@ -17,6 +17,7 @@ class ScheduleController extends GetxController{
   List allSchedules = [];
   List detailScheduleItems = [];
   String assignedDriver = "";
+  String assignedDriversId = "";
   String assignedDriverSPic = "";
   String scheduleType = "";
   String schedulePriority = "";
@@ -31,7 +32,10 @@ class ScheduleController extends GetxController{
   String description = "";
   String price = "";
   String charge = "";
+  String passenger = "";
   late Timer _timer;
+  List messages = [];
+  List allMessages = [];
 
 
   @override
@@ -44,13 +48,34 @@ class ScheduleController extends GetxController{
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
-    // getActiveSchedules();
-    // getAllSchedules();
-    // _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
-    //   getActiveSchedules();
-    //   getAllSchedules();
-    //   update();
-    // });
+  }
+  Future<void> getDetailScheduleMessages(String id,String token) async {
+    try{
+      isLoading = true;
+      final walletUrl = "https://taxinetghana.xyz/get_all_ride_messages/$id/";
+      var link = Uri.parse(walletUrl);
+      http.Response response = await http.get(link, headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": "Token $token"
+      });
+      if (response.statusCode == 200) {
+        final codeUnits = response.body.codeUnits;
+        var data = const Utf8Decoder().convert(codeUnits);
+        messages = json.decode(data);
+        allMessages.assignAll(messages);
+        update();
+      }
+      else{
+        if (kDebugMode) {
+          print(response.body);
+        }
+      }
+    }
+    catch (e) {}
+    finally {
+      isLoading = false;
+    }
+
   }
   Future<void> getDetailSchedule(String slug) async {
     try {
@@ -64,6 +89,7 @@ class ScheduleController extends GetxController{
       if (response.statusCode == 200) {
         final codeUnits = response.body;
         var jsonData = jsonDecode(codeUnits);
+        assignedDriversId = jsonData['assigned_driver'].toString();
         assignedDriver = jsonData['get_assigned_driver_name'];
         assignedDriverSPic = jsonData['get_assigned_driver_profile_pic'];
         scheduleType = jsonData['schedule_type'];
@@ -79,6 +105,7 @@ class ScheduleController extends GetxController{
         timeRequested = jsonData['time_scheduled'];
         price = jsonData['price'];
         charge = jsonData['charge'];
+        passenger = jsonData['passenger'].toString();
         update();
       }
       else{
@@ -140,6 +167,5 @@ class ScheduleController extends GetxController{
       isLoading = false;
     }
   }
-
 
 }

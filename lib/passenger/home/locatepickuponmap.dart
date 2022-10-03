@@ -38,33 +38,13 @@ class _LocatePickUpOnMapState extends State<LocatePickUpOnMap> {
                 icon:const Icon(Icons.arrow_back,color:defaultTextColor2)
             ),
             actions:[
-              pickedPickedName != "nothing" ?  RawMaterialButton(
+              pickedPickedName != "nothing" ?  TextButton(
                 onPressed: () {
                   _mapController.setPickUpLocation(pickedPickedName);
-                  // _mapController.dropOffLocation.text = pickedDropOffName;
+// _mapController.dropOffLocation.text = pickedDropOffName;
                   Get.back();
                 },
-                // child: const Text("Send"),
-                shape: RoundedRectangleBorder(
-                    borderRadius:
-                    BorderRadius
-                        .circular(
-                        8)),
-                elevation: 8,
-                fillColor:
-                Colors.green,
-                splashColor:
-                defaultColor,
-                child: const Text(
-                  "Okay",
-                  style: TextStyle(
-                      fontWeight:
-                      FontWeight
-                          .bold,
-                      fontSize: 15,
-                      color:
-                      defaultTextColor1),
-                ),
+                child: const Text("Okay",style: TextStyle(fontWeight: FontWeight.bold))
               ) : Container()
             ]
           ),

@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import "package:flutter/material.dart";
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import "package:get/get.dart";
 import '../../constants/app_colors.dart';
 import '../../g_controller/login_controller.dart';
 import '../../g_controller/userController.dart';
+import '../../passenger/home/nointernetconnections.dart';
 import '../register/register.dart';
 class NewLogin extends StatefulWidget {
   const NewLogin({Key? key}) : super(key: key);
@@ -30,6 +34,8 @@ class _NewLoginState extends State<NewLogin> {
   final FocusNode _usernameFocusNode = FocusNode();
   final storage = GetStorage();
   final loginData = MyLoginController.to;
+  late StreamSubscription internetSubscription;
+  bool hasInternet = false;
 
   String resetPasswordUrl = "https://taxinetghana.xyz/password-reset/";
   void _startPosting()async{
@@ -56,6 +62,10 @@ class _NewLoginState extends State<NewLogin> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    internetSubscription = InternetConnectionChecker().onStatusChange.listen((status){
+      final hasInternet = status == InternetConnectionStatus.connected;
+      setState(()=> this.hasInternet = hasInternet);
+    });
     if (storage.read("passenger_username") != null) {
       username = storage.read("passenger_username");
     }
@@ -68,10 +78,17 @@ class _NewLoginState extends State<NewLogin> {
       profilePic = storage.read("profile_pic");
     }
   }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _startPosting();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView(
+      body: !hasInternet  ? const NoInternetConnection() : ListView(
         children: [
           const SizedBox(height: 40),
       profilePic != ""?  GetBuilder<UserController>(

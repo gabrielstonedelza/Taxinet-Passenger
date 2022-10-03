@@ -75,18 +75,7 @@ class UserController extends GetxController {
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
-    // getUserProfile();
-    // getAllUsers();
-    // getAllDrivers();
-    // getAllPassengers();
-    //
-    // _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
-    //   getUserProfile();
-    //   getAllUsers();
-    //   update();
-    //   getAllDrivers();
-    //   getAllPassengers();
-    // });
+  
   }
 
   File? profileImageUpload;

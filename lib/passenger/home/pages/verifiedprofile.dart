@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:get/get.dart";
 import '../../../constants/app_colors.dart';
 import '../../../g_controller/userController.dart';
+import '../../../widgets/shimmers/shimmerwidget.dart';
 
 class VerifiedProfile extends StatefulWidget {
   const VerifiedProfile({Key? key}) : super(key: key);
@@ -104,7 +105,16 @@ class _VerifiedProfileState extends State<VerifiedProfile> {
                   )
                       : GetBuilder<UserController>(
                     builder: (controller) {
-                      return Container(
+                      return userController.isLoading
+                          ? const ShimmerWidget.circular(
+                          width: 100, height: 100)
+                          : userController.profileImage == ""
+                          ? const CircleAvatar(
+                        backgroundImage: AssetImage(
+                            "assets/images/user.png"),
+                        radius: 50,
+                      )
+                          : Container(
                         width:100,
                         height: 100,
                         decoration: BoxDecoration(

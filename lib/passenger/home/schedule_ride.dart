@@ -103,6 +103,8 @@ class _ScheduleRideState extends State<ScheduleRide> {
         _dropOffLocationController.text = "";
         _pickUpTimeController.text = "";
         _startDateController.text = "";
+        _mapController.pickUpLocation = "";
+        _mapController.dropOffLocation = "";
       });
     }
     else{
@@ -337,20 +339,18 @@ class _ScheduleRideState extends State<ScheduleRide> {
                         child: Padding(
                           padding: const EdgeInsets.only(left: 8.0,right: 10),
                           child: TextFormField(
+                            onTap: (){
+                              Get.to(() =>  LocatePickUpOnMap(pickUp:"PickUp"));
+                            },
                             readOnly:true,
                             autocorrect: true,
                             controller: _pickUpLocationController..text=controller.pickUpLocation,
                             focusNode: _pickUpLocationFocusNode,
-                            decoration: InputDecoration(
-                              prefixIcon: IconButton(
-                                  onPressed: () async{
-                                    Get.to(() =>  LocatePickUpOnMap(pickUp:"PickUp"));
-                                  },
-                                  icon: const Icon(Icons.location_on,color:Colors.green)
-                              ),
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.location_on,color:Colors.green),
                               border: InputBorder.none,
                               hintText: "Pick Up Location",
-                              hintStyle: const TextStyle(color: defaultTextColor2),
+                              hintStyle: TextStyle(color: defaultTextColor2),
                             ),
                             cursorColor: defaultTextColor2,
                             style: const TextStyle(color: defaultTextColor2),
@@ -381,20 +381,18 @@ class _ScheduleRideState extends State<ScheduleRide> {
                         child: Padding(
                           padding: const EdgeInsets.only(left: 8.0,right: 10),
                           child: TextFormField(
+                            onTap: (){
+                              Get.to(() => LocateOnMap(dropOff:"DropOff"));
+                            },
                             readOnly:true,
                             autocorrect: true,
                             controller: _dropOffLocationController..text=controller.dropOffLocation,
                             focusNode: _dropOffLocationFocusNode,
-                            decoration: InputDecoration(
-                              prefixIcon: IconButton(
-                                  onPressed: () async{
-                                    Get.to(() => LocateOnMap(dropOff:"DropOff"));
-                                  },
-                                  icon: const Icon(Icons.location_on,color:Colors.red)
-                              ),
+                            decoration: const InputDecoration(
+                              prefixIcon: Icon(Icons.location_on,color:Colors.red),
                               border: InputBorder.none,
                               hintText: "Drop Off Location",
-                              hintStyle: const TextStyle(color: defaultTextColor2),
+                              hintStyle: TextStyle(color: defaultTextColor2),
 
                             ),
                             cursorColor: defaultTextColor2,

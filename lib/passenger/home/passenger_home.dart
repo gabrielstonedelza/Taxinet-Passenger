@@ -89,7 +89,7 @@ class PassengerHome extends StatelessWidget {
                                                             ),
                                                             child: ListTile(
                                                               onTap: (){
-                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.allSchedules[index]['slug'],title:scheduleController.allSchedules[index]['schedule_title']));
+                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.allSchedules[index]['slug'],title:scheduleController.allSchedules[index]['schedule_title'],id:scheduleController.allSchedules[index]['id'].toString()));
                                                                 // Navigator.pop(context);
                                                               },
                                                                 leading: const Icon(Icons.access_time_filled),
@@ -168,7 +168,7 @@ class PassengerHome extends StatelessWidget {
                                                           ),
                                                           child: ListTile(
                                                               onTap: (){
-                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.activeSchedules[index]['slug'],title:scheduleController.activeSchedules[index]['schedule_title']));
+                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.activeSchedules[index]['slug'],title:scheduleController.activeSchedules[index]['schedule_title'],id:scheduleController.allSchedules[index]['id'].toString()));
                                                               },
                                                               leading: const Icon(Icons.access_time_filled),
                                                               title: Text(items['schedule_title'],style:const TextStyle(fontWeight: FontWeight.bold)),
@@ -216,77 +216,6 @@ class PassengerHome extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 10,),
-                        // Padding(
-                        //   padding: const EdgeInsets.all(18.0),
-                        //   child: Row(
-                        //     children: [
-                        //       Expanded(
-                        //         child: InkWell(
-                        //           splashColor: primaryColor,
-                        //           onTap: (){
-                        //             Get.to(()=> Notifications());
-                        //           },
-                        //           child: ClipRRect(
-                        //             borderRadius: BorderRadius.circular(12),
-                        //             child: Container(
-                        //               color: greyBack,
-                        //               height: 85,
-                        //               width: 200,
-                        //               child: Padding(
-                        //                 padding: const EdgeInsets.all(8.0),
-                        //                 child: Column(
-                        //                   children: [
-                        //                     Row(
-                        //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //                       children: const [
-                        //                         Icon(FontAwesomeIcons.bell,color: orangeBack,),
-                        //                         Text("0",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: Colors.grey),)
-                        //                       ],
-                        //                     ),
-                        //                     const SizedBox(height: 10,),
-                        //                     const Text("Notifications",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: Colors.grey),)
-                        //                   ],
-                        //                 ),
-                        //               ),
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       ),
-                        //       const SizedBox(width: 20,),
-                        //       Expanded(
-                        //         child: InkWell(
-                        //           splashColor: primaryColor,
-                        //           onTap: (){
-                        //             Get.to(()=> const Profile());
-                        //           },
-                        //           child: ClipRRect(
-                        //             borderRadius: BorderRadius.circular(12),
-                        //             child: Container(
-                        //               color: greyBack,
-                        //               height: 85,
-                        //               width: 200,
-                        //               child: Padding(
-                        //                 padding: const EdgeInsets.all(8.0),
-                        //                 child: Column(
-                        //                   children: [
-                        //                     Row(
-                        //                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        //                       children: const [
-                        //                         Icon(FontAwesomeIcons.user,color: purpleBack,),
-                        //                       ],
-                        //                     ),
-                        //                     const SizedBox(height: 10,),
-                        //                     const Text("Profile",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color: Colors.grey),)
-                        //                   ],
-                        //                 ),
-                        //               ),
-                        //             ),
-                        //           ),
-                        //         ),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // ),
                       ],
                     ),
                   ],

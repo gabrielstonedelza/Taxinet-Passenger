@@ -9,8 +9,9 @@ import 'package:taxinet/passenger/home/passenger_home.dart';
 
 import '../constants/app_colors.dart';
 import '../views/bottomnavigationbar.dart';
+import '../views/login/newlogin.dart';
 
-class MyLoginController extends GetxController{
+class MyLoginController extends GetxController {
   static MyLoginController get to => Get.find<MyLoginController>();
   final storage = GetStorage();
   var username = "";
@@ -41,7 +42,7 @@ class MyLoginController extends GetxController{
       if (response.statusCode == 200) {
         var jsonData = jsonDecode(response.body);
         allPassengers.assignAll(jsonData);
-        for(var i in allPassengers){
+        for (var i in allPassengers) {
           passengerUserNames.add(i['username']);
         }
         update();
@@ -50,8 +51,7 @@ class MyLoginController extends GetxController{
       if (kDebugMode) {
         print(e.toString());
       }
-    }
-    finally{
+    } finally {
       isLoading = false;
     }
   }
@@ -80,17 +80,24 @@ class MyLoginController extends GetxController{
       update();
 
       if (passengerUserNames.contains(uname)) {
-        Timer(const Duration(seconds: 1), () =>
-            Get.offAll(() => const MyBottomNavigationBar()));
-      }
-      else {
-
-        Get.snackbar("Sorry 😢", response.body,
+        Timer(const Duration(seconds: 1),
+            () => Get.offAll(() => const MyBottomNavigationBar()));
+      } else {
+        Get.snackbar("Sorry 😢", "invalid details",
             duration: const Duration(seconds: 5),
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: Colors.red,
             colorText: defaultTextColor1);
+        Get.offAll(() => const NewLogin());
       }
+    } else {
+      hasErrors = true;
+      Get.snackbar("Sorry 😢", "invalid details",
+          duration: const Duration(seconds: 5),
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: defaultTextColor1);
+      return;
     }
   }
 }

@@ -1,4 +1,6 @@
 import "package:flutter/material.dart";
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:taxinet/passenger/home/passengerdriverchat.dart';
 
 import '../../constants/app_colors.dart';
 import '../../g_controller/schedulescontroller.dart';
@@ -9,16 +11,18 @@ import '../../widgets/shimmers/shimmerwidget.dart';
 class ScheduleDetail extends StatefulWidget {
   String slug;
   String title;
-  ScheduleDetail({Key? key, required this.slug,required this.title}) : super(key: key);
+  String id;
+  ScheduleDetail({Key? key, required this.slug,required this.title,required this.id}) : super(key: key);
 
   @override
-  State<ScheduleDetail> createState() => _ScheduleDetailState(slug:this.slug,title:this.title);
+  State<ScheduleDetail> createState() => _ScheduleDetailState(slug:this.slug,title:this.title,id:this.id);
 }
 
 class _ScheduleDetailState extends State<ScheduleDetail> {
   String slug;
   String title;
-  _ScheduleDetailState({required this.slug,required this.title});
+  String id;
+  _ScheduleDetailState({required this.slug,required this.title,required this.id});
 
   ScheduleController controller = Get.find();
 
@@ -61,7 +65,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    controller.status == "Active" ? Column(
+                    Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -89,7 +93,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                             ],
                           )
                         ]
-                    ): Container(),
+                    ),
                     const SizedBox(height:10),
                     const Divider(),
                     const SizedBox(height:10),
@@ -279,7 +283,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
             ),
           )
         ],
-      )
+      ),
     );
   }
 }
