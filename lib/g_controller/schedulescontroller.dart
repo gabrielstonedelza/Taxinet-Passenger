@@ -71,7 +71,11 @@ class ScheduleController extends GetxController{
         }
       }
     }
-    catch (e) {}
+    catch (e) {
+      if (kDebugMode) {
+        print(e.toString());
+      }
+    }
     finally {
       isLoading = false;
     }

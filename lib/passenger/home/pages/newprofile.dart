@@ -7,7 +7,6 @@ import '../../../constants/app_colors.dart';
 import '../../../g_controller/userController.dart';
 import "package:get/get.dart";
 
-import '../../../views/login/loginview.dart';
 import 'completeset.dart';
 
 class MyProfile extends StatefulWidget {
@@ -22,26 +21,7 @@ class _MyProfileState extends State<MyProfile> {
   UserController userController = Get.find();
 
   logoutUser() async {
-    storage.remove("username");
     Get.offAll(() => const NewLogin());
-    const logoutUrl = "https://taxinetghana.xyz/auth/token/logout";
-    final myLink = Uri.parse(logoutUrl);
-    http.Response response = await http.post(myLink, headers: {
-      'Accept': 'application/json',
-      "Authorization": "Token ${storage.read("userToken")}"
-    });
-
-    if (response.statusCode == 200) {
-      Get.snackbar("Success", "You were logged out",
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: snackColor);
-      storage.remove("username");
-      storage.remove("userToken");
-      storage.remove("user_type");
-      storage.remove("verified");
-      storage.remove("userid");
-    }
   }
   @override
   Widget build(BuildContext context) {
@@ -207,6 +187,10 @@ class _MyProfileState extends State<MyProfile> {
                                               BorderRadius.circular(8)),
                                           elevation:
                                           8,
+                                          fillColor:
+                                          primaryColor,
+                                          splashColor:
+                                          defaultColor,
                                           child:
                                           const Text(
                                             "No",
@@ -218,10 +202,6 @@ class _MyProfileState extends State<MyProfile> {
                                                 color:
                                                 defaultTextColor1),
                                           ),
-                                          fillColor:
-                                          primaryColor,
-                                          splashColor:
-                                          defaultColor,
                                         )),
                                   ],
                                 )
@@ -249,7 +229,6 @@ class _MyProfileState extends State<MyProfile> {
                                 defaultTextColor1),
                           ),
                         )
-
                       ],
                     ),
                   )

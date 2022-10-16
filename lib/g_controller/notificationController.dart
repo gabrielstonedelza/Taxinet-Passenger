@@ -16,6 +16,8 @@ class NotificationController extends GetxController {
   final storage = GetStorage();
   var username = "";
   late String uToken = "";
+  late List yourNotifications = [];
+  late List notRead = [];
 
   late Timer _timer;
 
@@ -29,11 +31,6 @@ class NotificationController extends GetxController {
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
-    // getAllNotifications();
-    // _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
-    //   getAllNotifications();
-    //   update();
-    // });
   }
 
   Future<void> getAllNotifications(String token) async {
@@ -47,9 +44,7 @@ class NotificationController extends GetxController {
         final codeUnits = response.body.codeUnits;
         var jsonData = const Utf8Decoder().convert(codeUnits);
         allNotifications = json.decode(jsonData);
-        if (kDebugMode) {
-          // print(response.body);
-        }
+        update();
       } else {
         if (kDebugMode) {
           // print(response.body);
@@ -63,6 +58,36 @@ class NotificationController extends GetxController {
     }
     finally {
       isLoading = false;
+    }
+  }
+
+  Future<void> getAllUnReadNotifications(String token) async {
+    const url = "https://taxinetghana.xyz/user_notifications/";
+    var myLink = Uri.parse(url);
+    final response =
+    await http.get(myLink, headers: {"Authorization": "Token $token"});
+    if (response.statusCode == 200) {
+      final codeUnits = response.body.codeUnits;
+      var jsonData = const Utf8Decoder().convert(codeUnits);
+      yourNotifications = json.decode(jsonData);
+      notRead.assignAll(yourNotifications);
+      update();
+    }
+  }
+  Future<void> getUserReadNotifications(String token) async {
+    const url = "https://taxinetghana.xyz/user_read_notifications/";
+    var myLink = Uri.parse(url);
+    final response =
+    await http.get(myLink, headers: {"Authorization": "Token $token"});
+    if(response.statusCode == 200){
+      if (kDebugMode) {
+        print(response.body);
+      }
+    }
+    else{
+      if (kDebugMode) {
+        print(response.body);
+      }
     }
   }
 }

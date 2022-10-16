@@ -2,12 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:provider/provider.dart';
 import 'package:taxinet/passenger/home/pages/completeset.dart';
 import '../../constants/app_colors.dart';
 import '../../g_controller/userController.dart';
 import '../../mapscontroller.dart';
-import '../../states/schedule_state.dart';
 import 'locateonmap.dart';
 import 'locatepickuponmap.dart';
 import 'package:http/http.dart' as http;
@@ -144,7 +142,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
   @override
   Widget build(BuildContext context) {
     Size size  = MediaQuery.of(context).size;
-    final scheduleState = Provider.of<ScheduleState>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text("Schedule Ride",style:TextStyle(color: defaultTextColor2)),

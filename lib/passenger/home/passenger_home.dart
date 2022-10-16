@@ -3,14 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:taxinet/passenger/home/pages/notifications.dart';
-import 'package:taxinet/passenger/home/pages/profile.dart';
 import 'package:taxinet/passenger/home/scheduledetail.dart';
-import 'package:taxinet/widgets/mydrawer.dart';
 import '../../constants/app_colors.dart';
 import '../../g_controller/schedulescontroller.dart';
 import '../../g_controller/userController.dart';
-import '../../views/welcome_options.dart';
 
 
 class PassengerHome extends StatelessWidget {
@@ -34,7 +30,6 @@ class PassengerHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return SafeArea(
         child: Scaffold(
           backgroundColor: primaryColor,

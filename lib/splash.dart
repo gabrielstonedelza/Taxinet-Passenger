@@ -3,13 +3,12 @@ import 'package:get/get.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:taxinet/passenger/home/passenger_home.dart';
 import 'package:taxinet/views/bottomnavigationbar.dart';
-import 'package:taxinet/views/login/loginview.dart';
 import 'package:taxinet/views/login/newlogin.dart';
 
 
 import 'g_controller/login_controller.dart';
+import 'onboarding/passenger/passenger_intro.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -24,6 +23,7 @@ class _SplashScreenState extends State<SplashScreen> {
   late String token = "";
   late String userType = "";
   bool hasToken = false;
+  bool hasViewedIntro = false;
   @override
   void initState() {
     super.initState();
@@ -39,7 +39,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (hasToken && storage.read("userType") == "Passenger") {
       Timer(const Duration(seconds: 7),
-              () => Get.offAll(() => const MyBottomNavigationBar()));
+              () {
+                Get.offAll(() => const MyBottomNavigationBar());
+              }
+      );
     } else {
       Timer(const Duration(seconds: 7),
               () => Get.offAll(() => const NewLogin()));

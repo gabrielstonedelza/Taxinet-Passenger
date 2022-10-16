@@ -20,7 +20,7 @@ dependencies:
   get_storage:
   badges:
   url_launcher:
-  flutter_local_notifications:
+  flutter_local_notifications: ^9.6.0
   rxdart:
   dio:
   modal_bottom_sheet:
@@ -53,6 +53,10 @@ dependencies:
   shimmer: ^2.0.0
   pull_to_refresh: ^2.0.0
   time_elapsed: ^0.2.6
+  google_nav_bar: ^5.0.6
+  pinput: ^2.2.12
+  awesome_notifications: ^0.7.2
+
 
 
 

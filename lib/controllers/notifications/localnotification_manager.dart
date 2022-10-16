@@ -1,4 +1,4 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:io' show Platform;
 import 'package:rxdart/rxdart.dart';
 
@@ -25,17 +25,17 @@ class LocalNotificationManager{
 
   initializePlatform(){
     var initSettingAndroid = const AndroidInitializationSettings("taxinet_cab");
-    var initSettingIOS = IOSInitializationSettings(
-        requestSoundPermission: true,
-        requestBadgePermission: true,
-        requestAlertPermission: true,
-        onDidReceiveLocalNotification: (id,title,body,payload)async{
-          ReceiveNotification notification = ReceiveNotification(id: id, title: title, body: body, payload: payload);
-          didReceiveLocalNotificationSubject.add(notification);
-
-        }
-    );
-    initSetting = InitializationSettings(android: initSettingAndroid,iOS: initSettingIOS);
+    // var initSettingIOS = IOSInitializationSettings(
+    //     requestSoundPermission: true,
+    //     requestBadgePermission: true,
+    //     requestAlertPermission: true,
+    //     onDidReceiveLocalNotification: (id,title,body,payload)async{
+    //       ReceiveNotification notification = ReceiveNotification(id: id, title: title, body: body, payload: payload);
+    //       didReceiveLocalNotificationSubject.add(notification);
+    //
+    //     }
+    // );
+    initSetting = InitializationSettings(android: initSettingAndroid,);
   }
 
   // show all notifications
@@ -58,8 +58,8 @@ class LocalNotificationManager{
         playSound: true,
         sound: RawResourceAndroidNotificationSound("horn")
     );
-    var iosChannel = const IOSNotificationDetails();
-    var platformChannel = NotificationDetails(android: androidChannel,iOS: iosChannel);
+    // var iosChannel = const IOSNotificationDetails();
+    var platformChannel = NotificationDetails(android: androidChannel);
     await flutterLocalNotificationsPlugin.show(0,title,body,platformChannel,payload: "New Payload");
   }
 

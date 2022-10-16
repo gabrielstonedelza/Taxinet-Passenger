@@ -15,7 +15,6 @@ import 'package:dio/dio.dart';
 
 import 'package:taxinet/constants/app_colors.dart';
 
-import '../views/bottomnavigationbar.dart';
 import 'login_controller.dart';
 
 class UserController extends GetxController {

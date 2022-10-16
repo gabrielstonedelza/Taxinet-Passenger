@@ -42,7 +42,6 @@ class _PassengerDriverChatState extends State<PassengerDriverChat> {
   late Timer _timer;
   bool isLoading = true;
   List allMessages = [];
-  bool _needsScroll = false;
 
 
   sendMessage() async {
@@ -60,7 +59,6 @@ class _PassengerDriverChatState extends State<PassengerDriverChat> {
 
       setState(() {
         messageController.text = "";
-        _needsScroll = true;
       });
 
     } else {

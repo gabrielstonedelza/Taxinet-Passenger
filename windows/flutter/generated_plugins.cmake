@@ -3,8 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  awesome_notifications
   connectivity_plus_windows
   geolocator_windows
+  smart_auth
   url_launcher_windows
 )
 

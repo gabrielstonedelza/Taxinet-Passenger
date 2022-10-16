@@ -1,8 +1,11 @@
 import 'dart:math';
+import 'package:animate_do/animate_do.dart';
+import 'package:flutter/services.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import "package:flutter/material.dart";
 import "package:get/get.dart";
+import 'package:taxinet/passenger/home/pages/verifynumber.dart';
 import '../../../constants/app_colors.dart';
 import '../../../g_controller/userController.dart';
 import '../../../sendsms.dart';
@@ -19,6 +22,12 @@ class _CompleteSetUpState extends State<CompleteSetUp> {
   UserController userController = Get.find();
   final _formKey = GlobalKey<FormState>();
   TextEditingController referralController = TextEditingController();
+  TextEditingController pin1Controller = TextEditingController();
+  TextEditingController pin2Controller = TextEditingController();
+  TextEditingController pin3Controller = TextEditingController();
+  TextEditingController pin4Controller = TextEditingController();
+  TextEditingController pin5Controller = TextEditingController();
+
   late final TextEditingController _oTPController = TextEditingController();
   bool isPosting = false;
   bool hasOTP = false;
@@ -84,13 +93,18 @@ class _CompleteSetUpState extends State<CompleteSetUp> {
     if (storage.read("userid") != null) {
       userid = storage.read("userid");
     }
+    print(oTP.toString()[0]);
+    print(oTP.toString()[1]);
+    print(oTP.toString()[2]);
+    print(oTP.toString()[3]);
+    print(oTP.toString()[4]);
   }
 
   @override
   Widget build(BuildContext context) {
 
-    Size size  = MediaQuery.of(context).size;
     return Scaffold(
+      backgroundColor: primaryColor,
       appBar: AppBar(
         title: const Text("Complete Setup",style:TextStyle(fontWeight: FontWeight.bold,fontSize: 20,color:Colors.black)),
         backgroundColor:Colors.transparent,
@@ -107,7 +121,15 @@ class _CompleteSetUpState extends State<CompleteSetUp> {
         child: userController.referral == "" ? ListView(
           children: [
             const SizedBox(height: 20),
-            const Center(child: Text("You need to  add a referral from Taxinet  to complete your account verification")),
+            Card(
+              elevation:12,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: Center(child: Text("You need to  add a referral from Taxinet  to complete your account verification")),
+                )),
 
             const SizedBox(height: 20),
             userController.referral == "" ? Column(
@@ -117,115 +139,132 @@ class _CompleteSetUpState extends State<CompleteSetUp> {
                   key: _formKey,
                   child: Column(
                     children: [
-                     !sentOTP ? Padding(
-                        padding: const EdgeInsets.only(bottom: 10.0),
-                        child: TextFormField(
-                          onChanged: (value){
-                            if(value.length == 10 && userController.phoneNumbers.contains(value)){
-                              Get.snackbar("Success", "number is in the system",
-                                  colorText: defaultTextColor1,
-                                  snackPosition: SnackPosition.TOP,
-                                  backgroundColor: snackColor);
-                              setState(() {
-                                sentOTP = true;
-                                String telnum = referralController.text;
-                                telnum = telnum.replaceFirst("0", '+233');
-                                sendSms.sendMySms(telnum, "Taxinet",
-                                    "Your code $oTP");
-                              });
-                            }
-                            if(value.length == 10 && !userController.phoneNumbers.contains(value)){
-                              Get.snackbar("Number Error", "number is not in the system.Please enter a valid number",
-                                  colorText: defaultTextColor1,
-                                  snackPosition: SnackPosition.TOP,
-                                  backgroundColor: Colors.red,
-                                  duration: const Duration(seconds: 5)
-                              );
-                            }
-                          },
-                          controller: referralController,
-                          cursorColor: defaultTextColor2,
-                          style: const TextStyle(color: defaultTextColor2),
-                          textInputAction: TextInputAction.done,
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            prefixIcon: const Icon(Icons.person,color: defaultTextColor2,),
-                            hintText: "Enter referral number",
-                            hintStyle: const TextStyle(color: defaultTextColor2,),
-                              focusColor: primaryColor,
-                              fillColor: primaryColor,
-                              focusedBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: defaultTextColor2, width: 2),
-                                  borderRadius: BorderRadius.circular(12))
-
-                          ),
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if(value!.isEmpty){
-                              return "Please enter customer number";
-                            }
-                          },
-                        ),
-                      ) : Container(),
-                      const SizedBox(height: 20),
-                      sentOTP ? Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: TextFormField(
-                              textInputAction: TextInputAction.next,
-                              onChanged: (value){
-                                if(value.length == 5 && int.parse(value) == oTP){
-                                  setState(() {
-                                    hasOTP = true;
-                                    sentOTP = false;
-                                  });
-                                  updatePassengerProfile();
-                                }
-                                else if(value.length == 5 && int.parse(value) == oTP){
-                                  Get.snackbar("OTP Error", "You entered an invalid code.",
-                                      colorText: defaultTextColor1,
-                                      snackPosition: SnackPosition.TOP,
-                                      backgroundColor: Colors.red);
-                                }
-                              },
-                              controller: _oTPController,
-                              cursorColor: defaultTextColor2,
-                              style: const TextStyle(color: defaultTextColor2),
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintText: "Enter OTP",
-                                hintStyle: const TextStyle(color: defaultTextColor2,),
-                                  focusColor: primaryColor,
-                                  fillColor: primaryColor,
-                                  focusedBorder: OutlineInputBorder(
-                                      borderSide: const BorderSide(
-                                          color: defaultTextColor2, width: 2),
-                                      borderRadius: BorderRadius.circular(12))
-                              ),
-                              keyboardType: TextInputType.number,
-                            ),
-                          ),
-                          const SizedBox(height: 10,),
-                          const Text("A message with your OTP has been sent to the number provider"),
-                          const SizedBox(height: 10,),
-                          GestureDetector(
-                              onTap: (){
-                                String telnum = referralController.text;
-                                telnum = telnum.replaceFirst("0", '+233');
-                                sendSms.sendMySms(telnum, "Taxinet",
-                                    "Your code $oTP");
-                                Get.snackbar("Success", "OTP was resent",
+                     !sentOTP ? Card(
+                       elevation: 12,
+                       shape: RoundedRectangleBorder(
+                         borderRadius: BorderRadius.circular(10)
+                       ),
+                       child: Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: TextFormField(
+                            onChanged: (value){
+                              if(value.length == 10 && userController.phoneNumbers.contains(value)){
+                                Get.snackbar("Success", "number is in the system",
                                     colorText: defaultTextColor1,
                                     snackPosition: SnackPosition.TOP,
                                     backgroundColor: snackColor);
-                              },
-                              child: const Text("Resend OTP",style: TextStyle(fontWeight: FontWeight.bold,color: defaultTextColor2),)
+                                setState(() {
+                                  sentOTP = true;
+                                  String telnum = referralController.text;
+                                  telnum = telnum.replaceFirst("0", '+233');
+                                  sendSms.sendMySms(telnum, "Taxinet",
+                                      "Your code $oTP");
+                                });
+                              }
+                              if(value.length == 10 && !userController.phoneNumbers.contains(value)){
+                                Get.snackbar("Number Error", "number is not in the system.Please enter a valid number",
+                                    colorText: defaultTextColor1,
+                                    snackPosition: SnackPosition.TOP,
+                                    backgroundColor: Colors.red,
+                                    duration: const Duration(seconds: 5)
+                                );
+                              }
+                            },
+                            controller: referralController,
+                            cursorColor: defaultTextColor2,
+                            style: const TextStyle(color: defaultTextColor2),
+                            textInputAction: TextInputAction.done,
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              prefixIcon: Icon(Icons.person,color: defaultTextColor2,),
+                              hintText: "Enter referral number",
+                              hintStyle: TextStyle(color: defaultTextColor2,),
+                                focusColor: primaryColor,
+                                fillColor: primaryColor,
+
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if(value!.isEmpty){
+                                return "Please enter customer number";
+                              }
+                            },
                           ),
-                          const SizedBox(height: 20,),
-                        ],
+                        ),
+                     ) : Container(),
+                      const SizedBox(height: 10),
+                      sentOTP ? SlideInUp(
+                        animate: true,
+                        child: Card(
+                          elevation: 12,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: TextFormField(
+                                    textInputAction: TextInputAction.next,
+                                    onChanged: (value){
+                                      if(value.length == 5 && int.parse(value) == oTP){
+                                        setState(() {
+                                          hasOTP = true;
+                                          sentOTP = false;
+                                        });
+                                        updatePassengerProfile();
+                                      }
+                                      else if(value.length == 5 && int.parse(value) == oTP){
+                                        Get.snackbar("OTP Error", "You entered an invalid code.",
+                                            colorText: defaultTextColor1,
+                                            snackPosition: SnackPosition.TOP,
+                                            backgroundColor: Colors.red);
+                                      }
+                                    },
+                                    controller: _oTPController,
+                                    cursorColor: defaultTextColor2,
+                                    style: const TextStyle(color: defaultTextColor2),
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none,
+                                      hintText: "Enter OTP",
+                                      hintStyle: const TextStyle(color: defaultTextColor2,),
+                                        focusColor: primaryColor,
+                                        fillColor: primaryColor,
+                                        focusedBorder: OutlineInputBorder(
+                                            borderSide: const BorderSide(
+                                                color: defaultTextColor2, width: 2),
+                                            borderRadius: BorderRadius.circular(12))
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                  ),
+                                ),
+                                const SizedBox(height: 10,),
+                                const Text("A message with your OTP has been sent to the number provider"),
+                                const SizedBox(height: 10,),
+                                GestureDetector(
+                                    onTap: (){
+                                      String telnum = referralController.text;
+                                      telnum = telnum.replaceFirst("0", '+233');
+                                      sendSms.sendMySms(telnum, "Taxinet",
+                                          "Your code $oTP");
+                                      Get.snackbar("Success", "OTP was resent",
+                                          colorText: defaultTextColor1,
+                                          snackPosition: SnackPosition.TOP,
+                                          backgroundColor: snackColor);
+                                    },
+                                    child: const Text("Resend OTP",style: TextStyle(fontWeight: FontWeight.bold,color: defaultTextColor2),)
+                                ),
+                                const SizedBox(height: 20,),
+                                myPinBox(),
+                                const SizedBox(height: 10,),
+                              ],
+                            ),
+                          ),
+                        ),
                       ) : Container(),
+                      // sentOTP ? SlideInUp(animate:true,child: myPinBox()) : Container()
                     ],
                   ),
                 ): Container(),
@@ -241,6 +280,210 @@ class _CompleteSetUpState extends State<CompleteSetUp> {
             )
           ],
         ),
+      ),
+    );
+  }
+
+  Widget myPinBox(){
+
+    return Form(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          SizedBox(
+            height: 68,
+            width: 64,
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.grey[500]?.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16)
+              ),
+              child: Center(
+                child: TextFormField(
+                  controller: pin1Controller,
+                  onChanged: (value){
+                    if(value.length == 1 && value == oTP.toString()[0]){
+                      FocusScope.of(context).nextFocus();
+                    }
+                    else{
+                      Get.snackbar("Number Error", "invalid number",
+                          duration: const Duration(seconds: 5),
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.red,
+                          colorText: defaultTextColor1);
+                    }
+                  },
+                  autofocus: true,
+                  style: Theme.of(context).textTheme.headline6,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  inputFormatters: [LengthLimitingTextInputFormatter(1),FilteringTextInputFormatter.digitsOnly],
+                  // controller: otpController,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: defaultTextColor1,),
+                  ),
+                  cursorColor: defaultTextColor1,
+                ),
+              ),
+            ),
+
+          ),
+          SizedBox(
+            height: 68,
+            width: 64,
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.grey[500]?.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16)
+              ),
+              child: Center(
+                child: TextFormField(
+                  controller: pin2Controller,
+                  onChanged: (value){
+                    if(value.length == 1 && value == oTP.toString()[1]){
+                      FocusScope.of(context).nextFocus();
+                    }
+                    else{
+                      Get.snackbar("Number Error", "invalid number",
+                          duration: const Duration(seconds: 5),
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.red,
+                          colorText: defaultTextColor1);
+                    }
+                  },
+                  style: Theme.of(context).textTheme.headline6,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  inputFormatters: [LengthLimitingTextInputFormatter(1),FilteringTextInputFormatter.digitsOnly],
+                  // controller: otpController,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: defaultTextColor1,),
+                  ),
+                  cursorColor: defaultTextColor1,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 68,
+            width: 64,
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.grey[500]?.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16)
+              ),
+              child: Center(
+                child: TextFormField(
+                  controller: pin3Controller,
+                  onChanged: (value){
+                    if(value.length == 1 && value == oTP.toString()[2]){
+                      FocusScope.of(context).nextFocus();
+                    }
+                    else{
+                      Get.snackbar("Number Error", "invalid number",
+                          duration: const Duration(seconds: 5),
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.red,
+                          colorText: defaultTextColor1);
+                    }
+                  },
+                  style: Theme.of(context).textTheme.headline6,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  inputFormatters: [LengthLimitingTextInputFormatter(1),FilteringTextInputFormatter.digitsOnly],
+                  // controller: otpController,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: defaultTextColor1,),
+                  ),
+                  cursorColor: defaultTextColor1,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 68,
+            width: 64,
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.grey[500]?.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16)
+              ),
+              child: Center(
+                child: TextFormField(
+                  controller: pin4Controller,
+                  onChanged: (value){
+                    if(value.length == 1 && value == oTP.toString()[3]){
+                      FocusScope.of(context).nextFocus();
+                    }
+                    else{
+                      Get.snackbar("Number Error", "invalid number",
+                          duration: const Duration(seconds: 5),
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.red,
+                          colorText: defaultTextColor1);
+                    }
+                  },
+                  style: Theme.of(context).textTheme.headline6,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  inputFormatters: [LengthLimitingTextInputFormatter(1),FilteringTextInputFormatter.digitsOnly],
+                  // controller: otpController,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: defaultTextColor1,),
+                  ),
+                  cursorColor: defaultTextColor1,
+                ),
+              ),
+            ),
+
+          ),
+          SizedBox(
+            height: 68,
+            width: 64,
+            child: Container(
+              decoration: BoxDecoration(
+                  color: Colors.grey[500]?.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(16)
+              ),
+              child: Center(
+                child: TextFormField(
+                  controller: pin5Controller,
+                  onChanged: (value){
+                    if(value.length == 1 && value == oTP.toString()[4]){
+                      // FocusScope.of(context).nextFocus();
+                      setState(() {
+                        hasOTP = true;
+                        sentOTP = false;
+                      });
+                      updatePassengerProfile();
+                    }
+                    else{
+                      Get.snackbar("Number Error", "invalid number",
+                          duration: const Duration(seconds: 5),
+                          snackPosition: SnackPosition.BOTTOM,
+                          backgroundColor: Colors.red,
+                          colorText: defaultTextColor1);
+                    }
+                  },
+                  style: Theme.of(context).textTheme.headline6,
+                  keyboardType: TextInputType.number,
+                  textAlign: TextAlign.center,
+                  inputFormatters: [LengthLimitingTextInputFormatter(1),FilteringTextInputFormatter.digitsOnly],
+                  // controller: otpController,
+                  decoration: const InputDecoration(
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: defaultTextColor1,),
+                  ),
+                  cursorColor: defaultTextColor1,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

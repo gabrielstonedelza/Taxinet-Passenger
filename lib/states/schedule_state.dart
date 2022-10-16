@@ -4,8 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 
 import '../constants/app_colors.dart';
-import '../passenger/home/passenger_home.dart';
-import '../views/bottomnavigationbar.dart';
 
 class ScheduleState extends ChangeNotifier{
 

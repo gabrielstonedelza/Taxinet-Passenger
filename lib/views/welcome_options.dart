@@ -2,8 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:lottie/lottie.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:taxinet/constants/app_colors.dart';
 import 'package:get/get.dart';
@@ -16,6 +18,7 @@ import '../g_controller/schedulescontroller.dart';
 import '../g_controller/userController.dart';
 import '../g_controller/walletcontroller.dart';
 import '../mapscontroller.dart';
+import '../onboarding/passenger/passenger_intro.dart';
 import '../passenger/home/pages/notifications.dart';
 import '../passenger/home/paymentmethods.dart';
 import '../passenger/home/payments.dart';
@@ -57,10 +60,10 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
   ScheduleController scheduleController = Get.find();
 
   Future<void> getAllTriggeredNotifications() async {
-    const url = "https://fnetghana.xyz/get_passengers_triggered_notifications/";
+    const url = "https://taxinetghana.xyz/user_triggerd_notifications/";
     var myLink = Uri.parse(url);
     final response =
-        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    await http.get(myLink, headers: {"Authorization": "Token $uToken"});
     if (response.statusCode == 200) {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
@@ -70,10 +73,10 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
   }
 
   Future<void> getAllUnReadNotifications() async {
-    const url = "https://fnetghana.xyz/get_passenger_notifications/";
+    const url = "https://taxinetghana.xyz/user_notifications/";
     var myLink = Uri.parse(url);
     final response =
-        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    await http.get(myLink, headers: {"Authorization": "Token $uToken"});
     if (response.statusCode == 200) {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
@@ -82,26 +85,21 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
     }
   }
 
-  Future<void> getAllPassengerNotifications() async {
-    const url = "https://fnetghana.xyz/passengers_notifications/";
+  Future<void> getAllNotifications() async {
+    const url = "https://taxinetghana.xyz/get_all_driver_notifications/";
     var myLink = Uri.parse(url);
     final response =
-        await http.get(myLink, headers: {"Authorization": "Token $uToken"});
+    await http.get(myLink, headers: {"Authorization": "Token $uToken"});
     if (response.statusCode == 200) {
       final codeUnits = response.body.codeUnits;
       var jsonData = const Utf8Decoder().convert(codeUnits);
-      notifications = json.decode(jsonData);
-      allNots.assignAll(notifications);
+      allNotifications = json.decode(jsonData);
+      allNots.assignAll(allNotifications);
     }
-    setState(() {
-      isLoading = false;
-      allNotifications = allNotifications;
-      isFetching = false;
-    });
   }
 
   unTriggerNotifications(int id) async {
-    final requestUrl = "https://fnetghana.xyz/read_notification/$id/";
+    final requestUrl = "https://taxinetghana.xyz/user_read_notifications/$id/";
     final myLink = Uri.parse(requestUrl);
     final response = await http.put(myLink, headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -192,6 +190,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
     userController.getAllPassengers();
     walletController.getUserWallet(uToken);
     notificationController.getAllNotifications(uToken);
+    notificationController.getAllUnReadNotifications(uToken);
     scheduleController.getAllSchedules(uToken);
     scheduleController.getActiveSchedules(uToken);
     _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
@@ -201,6 +200,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
       userController.getAllPassengers();
       walletController.getUserWallet(uToken);
       notificationController.getAllNotifications(uToken);
+      notificationController.getAllUnReadNotifications(uToken);
       scheduleController.getAllSchedules(uToken);
       scheduleController.getActiveSchedules(uToken);
       });
@@ -223,6 +223,32 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
     });
     localNotificationManager.setOnAllNotificationReceive(onNotificationReceive);
     localNotificationManager.setOnAllNotificationClick(onNotificationClick);
+
+  //  awesome_notifications
+  //   AwesomeNotifications().isNotificationAllowed().then((isAllowed) => {
+  //     if(!isAllowed) {
+  //       Get.defaultDialog(
+  //         title: "Allow Notifications",
+  //         content: const Text("Taxinet would like to send you notifications"),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: (){
+  //                AwesomeNotifications().requestPermissionToSendNotifications().then((_)=>{
+  //                Get.back()
+  //                });
+  //             },
+  //             child: const Text("Allow ")
+  //           ),
+  //           TextButton(
+  //               onPressed: (){
+  //                 Get.back();
+  //               },
+  //               child: const Text("Don't Allow ")
+  //           ),
+  //         ]
+  //       )
+  //     }
+  //   });
   }
 
   //notifications localNotificationManager
@@ -235,6 +261,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
+
     return SafeArea(
       child: Scaffold(
         backgroundColor: primaryColor,
@@ -243,7 +270,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
             Container(
               height: 250,
               decoration: const BoxDecoration(
-                color: primaryColor,
+                // color: primaryColor,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -408,10 +435,10 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                               )
                             : GetBuilder<UserController>(
                                 builder: (controller) {
-                                  return userController.isLoading
+                                  return controller.isLoading
                                       ? const ShimmerWidget.circular(
                                           width: 100, height: 100)
-                                      : userController.profileImage == ""
+                                      : controller.profileImage == ""
                                           ? const CircleAvatar(
                                               backgroundImage: AssetImage(
                                                   "assets/images/user.png"),
@@ -419,7 +446,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                             )
                                           : CircleAvatar(
                                               backgroundImage: NetworkImage(
-                                                  userController.profileImage),
+                                                  controller.profileImage),
                                               radius: size.width * 0.14,
                                             );
                                 },
@@ -478,18 +505,20 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: Center(
-                        child: Text(
-                          "${greetingMessage()}, ${userController.username.capitalize}",
-                          style: const TextStyle(
-                              color: defaultTextColor2,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20),
-                        ),
+                    const SizedBox(height: 10),
+                    IconButton(onPressed: (){
+                      Get.to(() => const PassengerOnBoarding());
+                    },icon: Lottie.asset("assets/json/120887-info.json",width:100,height: 100,fit: BoxFit.cover)),
+                    Center(
+                      child: Text(
+                        "${greetingMessage()}, ${userController.username.capitalize}",
+                        style: const TextStyle(
+                            color: defaultTextColor2,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20),
                       ),
                     ),
-                    // const SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     const Center(
                       child: Text(
                         "What do you want today?",

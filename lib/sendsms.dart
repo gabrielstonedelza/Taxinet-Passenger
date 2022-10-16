@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 class SendSmsController{
   //Flutter HTTP Implementation
@@ -15,9 +16,13 @@ class SendSmsController{
 // Get response from your request
     if(response.statusCode == 200){
       //all good
-      print('Response is: ${response.body}');
+      if (kDebugMode) {
+        print('Response is: ${response.body}');
+      }
     } else {
-      print('There was an issue sending message: ${response.body}');
+      if (kDebugMode) {
+        print('There was an issue sending message: ${response.body}');
+      }
     }
   }
 }

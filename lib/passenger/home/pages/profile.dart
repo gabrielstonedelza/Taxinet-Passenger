@@ -11,6 +11,8 @@ import '../../../constants/app_colors.dart';
 import '../../../views/login/loginview.dart';
 import 'package:http/http.dart' as http;
 
+import '../../../views/login/newlogin.dart';
+
 class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
 
@@ -30,7 +32,7 @@ class _ProfileState extends State<Profile> {
 
   logoutUser() async {
     storage.remove("username");
-    Get.offAll(() => const LoginView());
+    Get.offAll(() => const NewLogin());
     const logoutUrl = "https://taxinetghana.xyz/auth/token/logout";
     final myLink = Uri.parse(logoutUrl);
     http.Response response = await http.post(myLink, headers: {
@@ -47,7 +49,8 @@ class _ProfileState extends State<Profile> {
       storage.remove("userToken");
       storage.remove("user_type");
       storage.remove("verified");
-      Get.offAll(() => const LoginView());
+      storage.remove("viewedIntro");
+      Get.offAll(() => const NewLogin());
     }
   }
 
@@ -133,6 +136,8 @@ class _ProfileState extends State<Profile> {
                             Column(
                               children: [
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
                                   children: [
                                     IconButton(
                                       onPressed: () {
@@ -182,6 +187,10 @@ class _ProfileState extends State<Profile> {
                                                                         .circular(
                                                                             12)),
                                                             elevation: 8,
+                                                            fillColor:
+                                                                Colors.red,
+                                                            splashColor:
+                                                                defaultColor,
                                                             child:
                                                                 const Padding(
                                                               padding:
@@ -199,10 +208,6 @@ class _ProfileState extends State<Profile> {
                                                                         defaultTextColor1),
                                                               ),
                                                             ),
-                                                            fillColor:
-                                                                Colors.red,
-                                                            splashColor:
-                                                                defaultColor,
                                                           ),
                                                         ),
                                                         const SizedBox(
@@ -220,6 +225,10 @@ class _ProfileState extends State<Profile> {
                                                                         .circular(
                                                                             12)),
                                                             elevation: 8,
+                                                            fillColor:
+                                                                primaryColor,
+                                                            splashColor:
+                                                                defaultColor,
                                                             child:
                                                                 const Padding(
                                                               padding:
@@ -237,10 +246,6 @@ class _ProfileState extends State<Profile> {
                                                                         defaultTextColor1),
                                                               ),
                                                             ),
-                                                            fillColor:
-                                                                primaryColor,
-                                                            splashColor:
-                                                                defaultColor,
                                                           ),
                                                         ),
                                                       ],
@@ -269,8 +274,6 @@ class _ProfileState extends State<Profile> {
                                       );
                                     }),
                                   ],
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
                                 ),
                                 const SizedBox(
                                   height: 10,
@@ -331,6 +334,8 @@ class _ProfileState extends State<Profile> {
                                           borderRadius:
                                               BorderRadius.circular(8)),
                                       elevation: 8,
+                                      fillColor: primaryColor,
+                                      splashColor: defaultColor,
                                       child: const Text(
                                         "More",
                                         style: TextStyle(
@@ -338,8 +343,6 @@ class _ProfileState extends State<Profile> {
                                             fontSize: 20,
                                             color: defaultTextColor1),
                                       ),
-                                      fillColor: primaryColor,
-                                      splashColor: defaultColor,
                                     ),
                                   ),
                                 ),
@@ -357,12 +360,12 @@ class _ProfileState extends State<Profile> {
                                     shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8)),
                                     elevation: 8,
+                                    fillColor: primaryColor,
+                                    splashColor: defaultColor,
                                     child: const Icon(
                                       FontAwesomeIcons.edit,
                                       color: defaultTextColor1,
                                     ),
-                                    fillColor: primaryColor,
-                                    splashColor: defaultColor,
                                   ),
                                 ),
                               ],

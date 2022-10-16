@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:taxinet/passenger/home/passenger_home.dart';
 
 import '../constants/app_colors.dart';
 import '../views/bottomnavigationbar.dart';
@@ -19,7 +18,7 @@ class MyLoginController extends GetxController {
   String userVerified = "Not Verified";
   String loggedInUserId = "";
   String deToken = "";
-
+  bool isPosting = true;
   late List allPassengers = [];
   late List passengerUserNames = [];
   bool isLoading = true;
@@ -77,12 +76,14 @@ class MyLoginController extends GetxController {
       storage.write("verified", userVerified);
       storage.write("userid", userId);
       username = uname;
+      hasErrors = false;
       update();
 
       if (passengerUserNames.contains(uname)) {
         Timer(const Duration(seconds: 1),
             () => Get.offAll(() => const MyBottomNavigationBar()));
       } else {
+        hasErrors = true;
         Get.snackbar("Sorry 😢", "invalid details",
             duration: const Duration(seconds: 5),
             snackPosition: SnackPosition.BOTTOM,

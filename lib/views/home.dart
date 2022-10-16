@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'dart:ui';
 import "package:get/get.dart";
 import "package:flutter/material.dart";
@@ -14,13 +13,7 @@ import '../g_controller/userController.dart';
 import '../g_controller/walletcontroller.dart';
 import '../mapscontroller.dart';
 import '../passenger/home/mycarousel.dart';
-import '../passenger/home/pages/gettickets.dart';
 import '../passenger/home/pages/notifications.dart';
-import '../passenger/home/pages/schedulebus.dart';
-import '../passenger/home/pages/scheduledelivery.dart';
-import '../passenger/home/pages/scheduleluxury.dart';
-import '../passenger/home/pages/scheduletruck.dart';
-import '../passenger/home/schedule_ride.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -126,15 +119,6 @@ class _HomePageState extends State<HomePage> {
     if (response.statusCode == 200) {}
   }
 
-  void _startPosting() async {
-    setState(() {
-      isPosting = true;
-    });
-    await Future.delayed(const Duration(seconds: 4));
-    setState(() {
-      isPosting = false;
-    });
-  }
 
   String greetingMessage() {
     var timeNow = DateTime.now().hour;
