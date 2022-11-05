@@ -56,6 +56,7 @@ class _LocatePickUpOnMapState extends State<LocatePickUpOnMap> {
                     target: LatLng(_mapController.userLatitude,_mapController.userLongitude),
                     zoom: 15.0,
                   ),
+                  myLocationEnabled: true,
                   myLocationButtonEnabled: true,
                   onTap: (latLng)async {
 

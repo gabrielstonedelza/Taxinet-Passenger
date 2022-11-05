@@ -56,10 +56,10 @@ class _LocateOnMapState extends State<LocateOnMap> {
                   target: LatLng(_mapController.userLatitude,_mapController.userLongitude),
                   zoom: 15.0,
                 ),
+                myLocationEnabled: true,
                 myLocationButtonEnabled: true,
                 onTap: (latLng)async {
                   List<Placemark> placemark = await placemarkFromCoordinates(latLng.latitude,latLng.longitude);
-
                   setState(() {
                     pickedDropOffName = placemark[2].street!;
                   });
