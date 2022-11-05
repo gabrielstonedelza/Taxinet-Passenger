@@ -22,17 +22,7 @@ void main() async {
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
   await GetStorage.init();
-  // AwesomeNotifications().initialize('android/app/src/main/res/drawable/taxinet_cab.png',
-  // [
-  //   NotificationChannel(
-  //     channelKey: 'basic_channel',
-  //     channelName: 'basic_notifications',
-  //     defaultColor: Colors.teal,
-  //     importance: NotificationImportance.High,
-  //     channelShowBadge: true,
-  //     channelDescription: '',
-  //   )
-  // ]);
+ 
   Get.put(MyLoginController());
   Get.put(MyRegistrationController());
   Get.put(RidesController());

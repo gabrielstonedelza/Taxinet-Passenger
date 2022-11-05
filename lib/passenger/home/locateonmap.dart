@@ -58,7 +58,6 @@ class _LocateOnMapState extends State<LocateOnMap> {
                 ),
                 myLocationButtonEnabled: true,
                 onTap: (latLng)async {
-
                   List<Placemark> placemark = await placemarkFromCoordinates(latLng.latitude,latLng.longitude);
 
                   setState(() {

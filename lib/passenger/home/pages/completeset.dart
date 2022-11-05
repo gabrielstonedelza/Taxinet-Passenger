@@ -93,11 +93,7 @@ class _CompleteSetUpState extends State<CompleteSetUp> {
     if (storage.read("userid") != null) {
       userid = storage.read("userid");
     }
-    print(oTP.toString()[0]);
-    print(oTP.toString()[1]);
-    print(oTP.toString()[2]);
-    print(oTP.toString()[3]);
-    print(oTP.toString()[4]);
+
   }
 
   @override

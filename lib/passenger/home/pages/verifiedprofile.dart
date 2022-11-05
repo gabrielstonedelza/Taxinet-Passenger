@@ -88,22 +88,7 @@ class _VerifiedProfileState extends State<VerifiedProfile> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  userController.profileImageUpload != null
-                      ? GetBuilder<UserController>(
-                    builder: (controller) {
-                      return Container(
-                        width:100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                                image: FileImage(
-                                    userController.profileImageUpload!),
-                                fit: BoxFit.cover)),
-                      );
-                    },
-                  )
-                      : GetBuilder<UserController>(
+                  GetBuilder<UserController>(
                     builder: (controller) {
                       return userController.isLoading
                           ? const ShimmerWidget.circular(

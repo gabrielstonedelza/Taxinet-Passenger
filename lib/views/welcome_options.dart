@@ -422,18 +422,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                       ),
                       const SizedBox(height: 10),
                       Center(
-                        child: userController.profileImageUpload != null
-                            ? GetBuilder<UserController>(
-                                builder: (controller) {
-                                  return CircleAvatar(
-                                    backgroundImage: FileImage(
-                                        userController.profileImageUpload!),
-                                    radius: size.width * 0.14,
-                                    backgroundColor: Colors.pink,
-                                  );
-                                },
-                              )
-                            : GetBuilder<UserController>(
+                        child: GetBuilder<UserController>(
                                 builder: (controller) {
                                   return controller.isLoading
                                       ? const ShimmerWidget.circular(
