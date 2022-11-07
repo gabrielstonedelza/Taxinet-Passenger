@@ -84,11 +84,11 @@ class PassengerHome extends StatelessWidget {
                                                             ),
                                                             child: ListTile(
                                                               onTap: (){
-                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.allSchedules[index]['slug'],title:scheduleController.allSchedules[index]['schedule_title'],id:scheduleController.allSchedules[index]['id'].toString()));
+                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.allSchedules[index]['slug'],id:scheduleController.allSchedules[index]['id'].toString()));
                                                                 // Navigator.pop(context);
                                                               },
                                                                 leading: const Icon(Icons.access_time_filled),
-                                                                title: Text(items['schedule_title'],style:const TextStyle(fontWeight: FontWeight.bold)),
+                                                                title: Text(items['get_passenger_name'],style:const TextStyle(fontWeight: FontWeight.bold)),
                                                                 subtitle: Padding(
                                                                   padding: const EdgeInsets.only(top:10.0),
                                                                   child: Text(items['date_scheduled']),
@@ -163,10 +163,10 @@ class PassengerHome extends StatelessWidget {
                                                           ),
                                                           child: ListTile(
                                                               onTap: (){
-                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.activeSchedules[index]['slug'],title:scheduleController.activeSchedules[index]['schedule_title'],id:scheduleController.allSchedules[index]['id'].toString()));
+                                                                Get.to(()=> ScheduleDetail(slug:scheduleController.activeSchedules[index]['slug'],id:scheduleController.allSchedules[index]['id'].toString()));
                                                               },
                                                               leading: const Icon(Icons.access_time_filled),
-                                                              title: Text(items['schedule_title'],style:const TextStyle(fontWeight: FontWeight.bold)),
+                                                              title: Text(items['get_passenger_name'],style:const TextStyle(fontWeight: FontWeight.bold)),
                                                               subtitle: Padding(
                                                                 padding: const EdgeInsets.only(top:10.0),
                                                                 child: Text(items['date_scheduled']),

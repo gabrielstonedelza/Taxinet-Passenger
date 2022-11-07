@@ -49,9 +49,6 @@ class MyApp extends StatelessWidget {
       child: const GetMaterialApp(
         debugShowCheckedModeBanner: false,
         defaultTransition: Transition.leftToRight,
-        // themeMode: ThemeMode.system,
-        // theme:MyThemes.lightTheme,
-        // darkTheme: MyThemes.darkTheme,
         home: SplashScreen(),
       ),
     );

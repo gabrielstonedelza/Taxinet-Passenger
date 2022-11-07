@@ -1,41 +1,111 @@
+import 'package:flutter/foundation.dart';
 import "package:flutter/material.dart";
+import 'package:get_storage/get_storage.dart';
 
 import '../../constants/app_colors.dart';
 import '../../g_controller/schedulescontroller.dart';
-import "package:get/get.dart";
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
+import 'package:get/get.dart';
 
 import '../../widgets/shimmers/shimmerwidget.dart';
 
 class ScheduleDetail extends StatefulWidget {
   String slug;
-  String title;
   String id;
-  ScheduleDetail({Key? key, required this.slug,required this.title,required this.id}) : super(key: key);
+  ScheduleDetail({Key? key, required this.slug,required this.id}) : super(key: key);
 
   @override
-  State<ScheduleDetail> createState() => _ScheduleDetailState(slug:this.slug,title:this.title,id:this.id);
+  State<ScheduleDetail> createState() => _ScheduleDetailState(slug:this.slug,id:this.id);
 }
 
 class _ScheduleDetailState extends State<ScheduleDetail> {
   String slug;
-  String title;
   String id;
-  _ScheduleDetailState({required this.slug,required this.title,required this.id});
+  _ScheduleDetailState({required this.slug,required this.id});
+  final storage = GetStorage();
+  var username = "";
+  String uToken = "";
+  bool isLoading = true;
 
   ScheduleController controller = Get.find();
+  List detailScheduleItems = [];
+  String assignedDriver = "";
+  String assignedDriversId = "";
+  String assignedDriverSPic = "";
+  String scheduleType = "";
+  String schedulePriority = "";
+  String rideType = "";
+  String pickUpLocation = "";
+  String dropOffLocation = "";
+  String pickUpTime = "";
+  String startDate = "";
+  String status = "";
+  String dateRequested = "";
+  String timeRequested = "";
+  String description = "";
+  String price = "";
+  String charge = "";
+  String passenger = "";
+
+  Future<void> getDetailSchedule() async {
+
+      final walletUrl = "https://taxinetghana.xyz/ride_requests/$id/";
+      var link = Uri.parse(walletUrl);
+      http.Response response = await http.get(link, headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": "Token $uToken"
+      });
+      if (response.statusCode == 200) {
+        final codeUnits = response.body;
+        var jsonData = jsonDecode(codeUnits);
+        assignedDriversId = jsonData['assigned_driver'].toString();
+        assignedDriver = jsonData['get_assigned_driver_name'];
+        assignedDriverSPic = jsonData['get_assigned_driver_profile_pic'];
+        scheduleType = jsonData['schedule_type'];
+        schedulePriority = jsonData['schedule_priority'];
+        description = jsonData['schedule_description'];
+        rideType = jsonData['ride_type'];
+        pickUpLocation = jsonData['pickup_location'];
+        dropOffLocation = jsonData['drop_off_location'];
+        pickUpTime = jsonData['pick_up_time'];
+        startDate = jsonData['start_date'];
+        status = jsonData['status'];
+        dateRequested = jsonData['date_scheduled'];
+        timeRequested = jsonData['time_scheduled'];
+        price = jsonData['price'];
+        charge = jsonData['charge'];
+        passenger = jsonData['passenger'].toString();
+      }
+      else{
+        if (kDebugMode) {
+          print(response.body);
+        }
+      }
+      setState(() {
+        isLoading = false;
+      });
+  }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    controller.getDetailSchedule(slug);
+    if (storage.read("userToken") != null) {
+      uToken = storage.read("userToken");
+    }
+    if (storage.read("username") != null) {
+      username = storage.read("username");
+    }
+    getDetailSchedule();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title,style:const TextStyle(color: defaultTextColor2)),
+        title: Text(id,style:const TextStyle(color: defaultTextColor2)),
         centerTitle: true,
         backgroundColor:Colors.transparent,
         elevation:0,
@@ -46,7 +116,12 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
             icon:const Icon(Icons.arrow_back,color:defaultTextColor2)
         ),
       ),
-      body: ListView(
+      body: isLoading ? const Center(
+          child:CircularProgressIndicator.adaptive(
+            strokeWidth: 5,
+            backgroundColor: primaryColor,
+          )
+      ) : ListView(
         children: [
           const SizedBox(height:20),
           Padding(
@@ -71,23 +146,16 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                           const SizedBox(height:10),
                           Row(
                             children: [
-                              GetBuilder<ScheduleController>(
-                                builder: (controller) {
-                                  return controller.assignedDriverSPic == "" ? const CircleAvatar(
-                                    backgroundImage: AssetImage("assets/images/user.png"),
-                                    radius: 50,
-                                  ):CircleAvatar(
-                                    backgroundImage: NetworkImage(
-                                        controller.
-                                        assignedDriverSPic),
-                                    radius: 30,
-                                  );
-                                },
-                              ),
+                          assignedDriverSPic == "" ? const CircleAvatar(
+                          backgroundImage: AssetImage("assets/images/user.png"),
+                                  radius: 50,
+                                ):CircleAvatar(
+                                  backgroundImage: NetworkImage(
+                                  assignedDriverSPic),
+                              radius: 30,
+                            ),
                               const SizedBox(width: 20,),
-                              GetBuilder<ScheduleController>(builder: (controller) {
-                                return Text(controller.assignedDriver,);
-                              })
+                              Text(assignedDriver,)
                             ],
                           )
                         ]
@@ -101,39 +169,10 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Schedule Type",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.scheduleType == "" ? const ShimmerWidget.rectangular(height: 20) : Text(controller.scheduleType);
-                          })
+                          scheduleType == "" ? const ShimmerWidget.rectangular(height: 20) : Text(scheduleType)
                         ]
                     ),
-                    const SizedBox(height:10),
-                    const Divider(),
-                    const SizedBox(height:10),
-                    Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Schedule Priority",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
-                          const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.schedulePriority == "" ? const ShimmerWidget.rectangular(height: 20) :Text(controller.schedulePriority);
-                          })
-                        ]
-                    ),
-                    const SizedBox(height:10),
-                    const Divider(),
-                    const SizedBox(height:10),
-                    Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Description",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
-                          const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.description == "" ? const ShimmerWidget.rectangular(height: 20) :  Text(controller.description);
-                          })
-                        ]
-                    ),
+
                     const SizedBox(height:10),
                     const Divider(),
                     const SizedBox(height:10),
@@ -143,9 +182,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Ride Type",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.rideType == "" ? const ShimmerWidget.rectangular(height: 20) : Text(controller.rideType);
-                          })
+                          rideType == "" ? const ShimmerWidget.rectangular(height: 20) : Text(rideType)
                         ]
                     ),
                     const SizedBox(height:10),
@@ -157,9 +194,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Pickup Location",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.pickUpLocation == "" ? const ShimmerWidget.rectangular(height: 20) : Text(controller.pickUpLocation);
-                          })
+                          pickUpLocation == "" ? const ShimmerWidget.rectangular(height: 20) : Text(pickUpLocation)
                         ]
                     ),
                     const SizedBox(height:10),
@@ -171,9 +206,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Drop Off Location",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.dropOffLocation == "" ? const ShimmerWidget.rectangular(height: 20) : Text(controller.dropOffLocation);
-                          })
+                          dropOffLocation == "" ? const ShimmerWidget.rectangular(height: 20) : Text(dropOffLocation)
                         ]
                     ),
                     const SizedBox(height:10),
@@ -185,9 +218,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Pick up time",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.pickUpTime == "" ? const ShimmerWidget.rectangular(height: 20) :   Text(controller.pickUpTime);
-                          })
+                          pickUpTime == "" ? const ShimmerWidget.rectangular(height: 20) :   Text(pickUpTime)
                         ]
                     ),
                     const SizedBox(height:10),
@@ -199,9 +230,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Start Date",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.startDate == "" ? const ShimmerWidget.rectangular(height: 20) :  Text(controller.startDate);
-                          })
+                          startDate == "" ? const ShimmerWidget.rectangular(height: 20) :  Text(startDate)
                         ]
                     ),
                     const SizedBox(height:10),
@@ -213,9 +242,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Status",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.status == "" ? const ShimmerWidget.rectangular(height: 20) :  Text(controller.status);
-                          })
+                          status == "" ? const ShimmerWidget.rectangular(height: 20) :  Text(status)
                         ]
                     ),
                     const SizedBox(height:10),
@@ -227,9 +254,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Date Requested",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.dateRequested == "" ? const ShimmerWidget.rectangular(height: 20) : Text(controller.dateRequested);
-                          })
+                          dateRequested == "" ? const ShimmerWidget.rectangular(height: 20) : Text(dateRequested)
                         ]
                     ),
                     const SizedBox(height:10),
@@ -241,9 +266,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Time Requested",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.timeRequested == "" ? const ShimmerWidget.rectangular(height: 20) : Text(controller.timeRequested.toString().split(".").first);
-                          })
+                          timeRequested == "" ? const ShimmerWidget.rectangular(height: 20) : Text(timeRequested.toString().split(".").first)
                         ]
                     ),
                     const SizedBox(height:10),
@@ -255,9 +278,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Price",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.price == "" ? const ShimmerWidget.rectangular(height: 20) : Text(controller.price);
-                          })
+                          price == "" ? const ShimmerWidget.rectangular(height: 20) : Text(price)
                         ]
                     ),
                     const SizedBox(height:10),
@@ -269,9 +290,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
                         children: [
                           const Text("Charge",style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15)),
                           const SizedBox(height:10),
-                          GetBuilder<ScheduleController>(builder: (controller) {
-                            return controller.charge == "" ? const ShimmerWidget.rectangular(height: 20) : Text(controller.charge);
-                          })
+                          charge == "" ? const ShimmerWidget.rectangular(height: 20) : Text(charge)
                         ]
                     ),
                   ],

@@ -80,7 +80,7 @@ class _PassengerOnBoardingState extends State<PassengerOnBoarding> {
               TextButton(
                 child: const Text("Skip",style: TextStyle(fontWeight: FontWeight.bold,color:Colors.white)),
                 onPressed: (){
-                  controller.jumpToPage(6);
+                  Get.offAll(()=> const MyBottomNavigationBar());
                 }
               ),
               Center(child:SmoothPageIndicator(

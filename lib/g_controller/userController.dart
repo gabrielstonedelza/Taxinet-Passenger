@@ -390,6 +390,7 @@ class UserController extends GetxController {
            phoneNumbers.add(i['phone_number']);
          }
         }
+
         update();
       }
       else{

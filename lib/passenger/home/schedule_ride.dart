@@ -76,10 +76,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
       'Accept': 'application/json',
       "Authorization": "Token $uToken"
     }, body: {
-      "schedule_title": _scheduleTitleController.text,
       "schedule_type": _currentSelectedScheduleType,
-      "schedule_priority": _currentSelectedPriority,
-      "schedule_description": _scheduleDescriptionController.text,
       "pickup_location": _pickUpLocationController.text,
       "drop_off_location": _dropOffLocationController.text,
       "pick_up_time": _pickUpTimeController.text,
@@ -195,78 +192,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey, width: 1)),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8.0,right: 10),
-                        child: TextFormField(
-                          controller: _scheduleTitleController,
-                          focusNode: _scheduleTitleFocusNode,
-                          autocorrect: true,
-                          enableSuggestions: true,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Schedule Title",
-                            hintStyle: TextStyle(color: defaultTextColor2,),
-                          ),
-                          cursorColor: defaultTextColor2,
-                          style: const TextStyle(color: defaultTextColor2),
-                          keyboardType: TextInputType.text,
-                          textInputAction: TextInputAction.next,
-                          validator: (value){
-                            if(value!.isEmpty){
-                              return "Enter Title";
-                            }
-                            else{
-                              return null;
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15,),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey, width: 1)),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 8.0,right: 10),
-                        child: TextFormField(
-                          autocorrect: true,
-                          enableSuggestions: true,
-                          controller: _scheduleDescriptionController,
-                          focusNode: _scheduleDescriptionFocusNode,
-                          maxLines: 3,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            hintText: "Description",
-                            hintStyle: TextStyle(color: defaultTextColor2),
 
-                          ),
-                          cursorColor: defaultTextColor2,
-                          style: const TextStyle(color: defaultTextColor2),
-                          keyboardType: TextInputType.visiblePassword,
-                          textInputAction: TextInputAction.next,
-
-                          validator: (value){
-                            if(value!.isEmpty){
-                              return "Enter Description";
-                            }
-                            else{
-                              return null;
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 15,),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10.0),
@@ -292,35 +218,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
                             _onDropDownItemSelectedScheduleType(newValueSelected);
                           },
                           value: _currentSelectedScheduleType,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15,),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey, width: 1)),
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 10.0, right: 10),
-                        child: DropdownButton(
-                          hint: const Text("Select Schedule Priority"),
-                          isExpanded: true,
-                          underline: const SizedBox(),
-                          style: const TextStyle(
-                              color: Colors.black, fontSize: 20),
-                          items: priorities.map((dropDownStringItem) {
-                            return DropdownMenuItem(
-                              value: dropDownStringItem,
-                              child: Text(dropDownStringItem),
-                            );
-                          }).toList(),
-                          onChanged: (newValueSelected) {
-                            _onDropDownItemSelectedPriority(newValueSelected);
-                          },
-                          value: _currentSelectedPriority,
                         ),
                       ),
                     ),
