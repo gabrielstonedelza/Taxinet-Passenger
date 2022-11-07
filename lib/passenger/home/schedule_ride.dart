@@ -81,6 +81,8 @@ class _ScheduleRideState extends State<ScheduleRide> {
       "drop_off_location": _dropOffLocationController.text,
       "pick_up_time": _pickUpTimeController.text,
       "start_date": _startDateController.text,
+      "drop_off_lat": _mapController.userLatitude.toString(),
+      "drop_off_lng": _mapController.userLongitude.toString(),
     });
     if (response.statusCode == 201) {
 
