@@ -26,11 +26,6 @@ class WalletController extends GetxController{
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
-    // getUserWallet();
-    // _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
-    //   getUserWallet();
-    //   update();
-    // });
   }
   Future<void> getUserWallet(String token) async {
     try {
@@ -48,7 +43,7 @@ class WalletController extends GetxController{
         for (var i in walletDetails) {
           wallet = i['amount'];
         }
-        if(double.parse(wallet) > 0){
+        if(double.parse(wallet) >= 50){
           canBook = true;
         }
         else{

@@ -35,6 +35,8 @@ class UserController extends GetxController {
   String backGhanaCard = "";
   String referral = "";
   String uniqueCode = "";
+  String promoterName = "";
+  String promoter = "";
   late bool verified;
   bool isVerified = false;
   late String updateUserName;
@@ -339,6 +341,8 @@ class UserController extends GetxController {
           nameOnGhanaCard = i['name_on_ghana_card'];
           email = i['get_passengers_email'];
           phoneNumber = i['get_passengers_phone_number'];
+          promoterName = i['get_promoter_username'];
+          promoter = i['promoter'].toString();
           fullName = i['get_passengers_full_name'];
           nextOfKin = i['next_of_kin'];
           nextOfKinPhoneNumber = i['next_of_kin_number'];

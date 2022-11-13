@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -68,6 +70,65 @@ class _ScheduleRideState extends State<ScheduleRide> {
   bool isPosting = false;
   final MapController _mapController = Get.find();
   bool isDays = false;
+  String promoter = "";
+  double initialBonus = 0.0;
+  String walletId = "";
+  bool isLoading = true;
+
+  Future<void> getPromoterWallet() async {
+    final walletUrl = "https://taxinetghana.xyz/get_wallet_by_username/${userController.promoterName}/";
+    var link = Uri.parse(walletUrl);
+    http.Response response = await http.get(link, headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    });
+    if (response.statusCode == 200) {
+      final codeUnits = response.body;
+      var jsonData = jsonDecode(codeUnits);
+
+      promoter = jsonData['user'].toString();
+      initialBonus = double.parse(jsonData['amount']);
+      walletId = jsonData['id'].toString();
+      print(promoter);
+      print(initialBonus);
+      print(walletId);
+    }
+    else{
+      if (kDebugMode) {
+        print(response.body);
+      }
+    }
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  updateWallet(String id,String amount)async {
+    final requestUrl = "https://taxinetghana.xyz/admin_update_wallet/$id/";
+    final myLink = Uri.parse(requestUrl);
+    final response = await http.put(myLink, headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      'Accept': 'application/json',
+      // "Authorization": "Token $uToken"
+    }, body: {
+      "amount" : amount,
+      "user" : promoter
+    });
+    if(response.statusCode == 200){
+
+      Get.snackbar("Success", "wallet was updated",
+          colorText: defaultTextColor1,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: primaryColor,
+          duration: const Duration(seconds: 5)
+      );
+    }
+    else{
+      if (kDebugMode) {
+        // print(response.body);
+      }
+    }
+  }
+
 
   scheduleRide() async {
     const requestUrl = "https://taxinetghana.xyz/request_ride/new/";
@@ -87,12 +148,14 @@ class _ScheduleRideState extends State<ScheduleRide> {
       "days": _daysController.text,
     });
     if (response.statusCode == 201) {
-
       Get.snackbar("Success 😀", "request sent.",
           duration: const Duration(seconds: 5),
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: primaryColor,
           colorText: defaultTextColor1);
+      double bonusAmount = 0.05;
+      double deAmount = bonusAmount + initialBonus;
+      updateWallet(walletId,deAmount.toString());
       setState(() {
         _scheduleTitleController.text = "";
         _currentSelectedScheduleType = "Select Schedule Type";
@@ -138,6 +201,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
+    getPromoterWallet();
   }
 
   @override
