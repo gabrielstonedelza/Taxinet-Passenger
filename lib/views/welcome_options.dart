@@ -500,7 +500,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                     },icon: Lottie.asset("assets/json/120887-info.json",width:100,height: 100,fit: BoxFit.cover)),
                     Center(
                       child: Text(
-                        "${greetingMessage()}, ${userController.username.capitalize}",
+                        "${greetingMessage()} ${userController.username.capitalize}",
                         style: const TextStyle(
                             color: defaultTextColor2,
                             fontWeight: FontWeight.bold,
@@ -508,8 +508,13 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Center(
-                      child: Text(
+                    Center(
+                      child: greetingMessage() == "Good Night" ? const Text(
+                        "Enjoy your sleep 😴",
+                        style: TextStyle(
+                            fontSize: 15,
+                            color: defaultTextColor2),
+                      ) : const Text(
                         "What do you want today?",
                         style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -812,6 +817,106 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                                 fontSize: 12,
                                               )),
                                         ))
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Divider(),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Get.snackbar(
+                                      "Hi 😛", "Taxinet workshop coming soon",
+                                      snackPosition: SnackPosition.BOTTOM,
+                                      duration: const Duration(seconds: 5),
+                                      colorText: Colors.white,
+                                      backgroundColor: primaryColor);
+                                },
+                                child: Container(
+                                  width: 150,
+                                  height: 150,
+                                  decoration: const BoxDecoration(
+                                    color: pearl,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(18.0),
+                                    child: Column(
+                                      children: [
+                                        Expanded(
+                                            child: Image.asset(
+                                                "assets/images/repair-shop.png")),
+                                        const SizedBox(height: 10),
+                                        const Expanded(
+                                            child: Center(
+                                              child: Text("Taxinet Workshop",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                  )),
+                                            ))
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: GestureDetector(
+                                onTap: () {
+                                  Get.snackbar(
+                                    "Hi 😛",
+                                    "Hotel reservations coming soon",
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    duration: const Duration(seconds: 5),
+                                    colorText: Colors.white,
+                                    backgroundColor: primaryColor,
+                                  );
+                                },
+                                child: Container(
+                                  width: 150,
+                                  height: 150,
+                                  decoration: const BoxDecoration(
+                                    color: pearl,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(18.0),
+                                    child: Column(
+                                      children: [
+                                        // Expanded(
+                                        //     child: Image.asset(
+                                        //         "assets/images/ticket.png")),
+                                        Expanded(
+                                            child: Image.asset(
+                                                "assets/images/hotel.png")),
+                                        const SizedBox(height: 10),
+                                        const Expanded(
+                                            child: Center(
+                                              child: Text("Taxinet Hotels",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                  )),
+                                            ))
                                       ],
                                     ),
                                   ),

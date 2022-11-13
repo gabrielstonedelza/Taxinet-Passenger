@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import "package:flutter/material.dart";
 import 'package:get_storage/get_storage.dart';
+import 'package:taxinet/passenger/home/pages/newchat.dart';
 
 import '../../constants/app_colors.dart';
 import '../../g_controller/schedulescontroller.dart';
@@ -33,6 +34,7 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
   List detailScheduleItems = [];
   String assignedDriver = "";
   String assignedDriversId = "";
+  String assignedDriversPhone = "";
   String assignedDriverSPic = "";
   String scheduleType = "";
   String schedulePriority = "";
@@ -63,9 +65,8 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
         assignedDriversId = jsonData['assigned_driver'].toString();
         assignedDriver = jsonData['get_assigned_driver_name'];
         assignedDriverSPic = jsonData['get_assigned_driver_profile_pic'];
+        assignedDriversPhone = jsonData['get_driver_phone_number'];
         scheduleType = jsonData['schedule_type'];
-        schedulePriority = jsonData['schedule_priority'];
-        description = jsonData['schedule_description'];
         rideType = jsonData['ride_type'];
         pickUpLocation = jsonData['pickup_location'];
         dropOffLocation = jsonData['drop_off_location'];
@@ -115,6 +116,18 @@ class _ScheduleDetailState extends State<ScheduleDetail> {
             },
             icon:const Icon(Icons.arrow_back,color:defaultTextColor2)
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right:18.0),
+            child: IconButton(
+                onPressed: (){
+                  // Get.to(()=> PrivateChat(passengerUsername:passengerUsername,receiverId:passengerId));
+                  Get.to(()=> NewChat(receiverUsername:assignedDriver,receiverId:assignedDriversId,receiverPhone:assignedDriversPhone));
+                },
+                icon: Image.asset("assets/images/chat.png",width:40,height:40)
+            ),
+          )
+        ],
       ),
       body: isLoading ? const Center(
           child:CircularProgressIndicator.adaptive(

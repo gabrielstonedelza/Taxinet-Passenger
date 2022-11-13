@@ -6,6 +6,7 @@ import 'package:taxinet/passenger/home/pages/completeset.dart';
 import '../../constants/app_colors.dart';
 import '../../g_controller/userController.dart';
 import '../../mapscontroller.dart';
+import '../../views/bottomnavigationbar.dart';
 import 'locateonmap.dart';
 import 'locatepickuponmap.dart';
 import 'package:http/http.dart' as http;
@@ -20,7 +21,7 @@ class ScheduleRide extends StatefulWidget {
 class _ScheduleRideState extends State<ScheduleRide> {
   List scheduleOptions =[
     "Select Schedule Type",
-    "One Time",
+    "Short Trip",
     "Daily",
     "Days",
     "Weekly",
@@ -35,7 +36,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
 
   String _currentSelectedScheduleType = "Select Schedule Type";
 
-  String _currentSelectedPriority = "Select Schedule Priority";
 
   late final  TextEditingController _scheduleTitleController = TextEditingController();
 
@@ -48,10 +48,10 @@ class _ScheduleRideState extends State<ScheduleRide> {
   late final  TextEditingController _pickUpTimeController = TextEditingController();
 
   late final  TextEditingController _startDateController = TextEditingController();
+  late final  TextEditingController _daysController = TextEditingController();
 
-  final FocusNode _scheduleTitleFocusNode = FocusNode();
+  final FocusNode _daysFocusNode = FocusNode();
 
-  final FocusNode _scheduleDescriptionFocusNode = FocusNode();
 
   final FocusNode _pickUpLocationFocusNode = FocusNode();
 
@@ -67,6 +67,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
   TimeOfDay _timeOfDay = const TimeOfDay(hour: 8, minute: 30);
   bool isPosting = false;
   final MapController _mapController = Get.find();
+  bool isDays = false;
 
   scheduleRide() async {
     const requestUrl = "https://taxinetghana.xyz/request_ride/new/";
@@ -83,6 +84,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
       "start_date": _startDateController.text,
       "drop_off_lat": _mapController.userLatitude.toString(),
       "drop_off_lng": _mapController.userLongitude.toString(),
+      "days": _daysController.text,
     });
     if (response.statusCode == 201) {
 
@@ -94,7 +96,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
       setState(() {
         _scheduleTitleController.text = "";
         _currentSelectedScheduleType = "Select Schedule Type";
-        _currentSelectedPriority = "Select Schedule Priority";
         _scheduleDescriptionController.text = "";
         _pickUpLocationController.text = "";
         _dropOffLocationController.text = "";
@@ -103,6 +104,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
         _mapController.pickUpLocation = "";
         _mapController.dropOffLocation = "";
       });
+      Get.offAll(() => const MyBottomNavigationBar());
     }
     else{
       if (kDebugMode) {
@@ -205,7 +207,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 10.0, right: 10),
                         child: DropdownButton(
-                          hint: const Text("Select Schedule Type"),
                           isExpanded: true,
                           underline: const SizedBox(),
                           style: const TextStyle(
@@ -218,12 +219,62 @@ class _ScheduleRideState extends State<ScheduleRide> {
                           }).toList(),
                           onChanged: (newValueSelected) {
                             _onDropDownItemSelectedScheduleType(newValueSelected);
+                            if(newValueSelected == "Days"){
+                              setState(() {
+                                isDays = true;
+                              });
+                            }
+                            else{
+                              setState(() {
+                                isDays = false;
+                              });
+                            }
                           },
                           value: _currentSelectedScheduleType,
                         ),
                       ),
                     ),
                   ),
+                  const SizedBox(height: 15,),
+                 isDays ? TextFormField(
+                    controller: _daysController,
+                    focusNode: _daysFocusNode,
+                    decoration: InputDecoration(
+                        labelText:
+                        "Enter days eg: Mondays, Wednesdays,Fridays",
+                        labelStyle:
+                        const TextStyle(
+                            color:
+                            muted),
+                        focusColor:
+                        muted,
+                        fillColor:
+                        muted,
+                        focusedBorder: OutlineInputBorder(
+                            borderSide: const BorderSide(
+                                color:
+                                muted,
+                                width:
+                                2),
+                            borderRadius:
+                            BorderRadius.circular(
+                                12)),
+                        border: OutlineInputBorder(
+                            borderRadius:
+                            BorderRadius.circular(12))),
+                    cursorColor: Colors.black,
+                    style: const TextStyle(color: Colors.black),
+                    keyboardType: TextInputType.text,
+                    textInputAction: TextInputAction.done,
+                    validator: (value){
+                      if(value!.isEmpty){
+                        return "Enter days";
+                      }
+                      else{
+                        return null;
+                      }
+                    },
+                  ) : Container(),
                   const SizedBox(height: 15,),
                   GetBuilder<MapController>(builder: (controller){
                     return Padding(
@@ -461,9 +512,4 @@ class _ScheduleRideState extends State<ScheduleRide> {
     });
   }
 
-  void _onDropDownItemSelectedPriority(newValueSelected) {
-    setState(() {
-      _currentSelectedPriority = newValueSelected;
-    });
-  }
 }

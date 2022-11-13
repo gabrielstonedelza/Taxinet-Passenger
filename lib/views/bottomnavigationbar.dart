@@ -1,15 +1,17 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:badges/badges.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:taxinet/passenger/home/pages/notifications.dart';
-
+import 'package:http/http.dart' as http;
 import 'package:taxinet/views/welcome_options.dart';
 import 'package:get/get.dart';
+import '../accountsblocked.dart';
 import '../g_controller/notificationController.dart';
 import '../passenger/home/pages/newprofile.dart';
-import '../passenger/home/passenger_home.dart';
+import '../passenger/home/schedules.dart';
 
 class MyBottomNavigationBar extends StatefulWidget {
   const MyBottomNavigationBar({Key? key}) : super(key: key);
@@ -27,10 +29,13 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   bool hasInternet = false;
   late StreamSubscription internetSubscription;
   NotificationController notificationController = Get.find();
+  late List allBlockedUsers = [];
+  late List blockedUsernames = [];
   late Timer _timer;
+  bool isBlocked = false;
   final screens = [
     const WelcomeOptions(),
-    PassengerHome(),
+    SchedulesHome(),
     Notifications(),
     const MyProfile(),
   ];
@@ -38,6 +43,29 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   void onSelectedIndex(int index){
     setState(() {
       selectedIndex = index;
+    });
+  }
+  bool isLoading = true;
+
+  fetchBlockedAgents()async{
+    const url = "https://fnetghana.xyz/get_blocked_users/";
+    var myLink = Uri.parse(url);
+    final response = await http.get(myLink,);
+    if(response.statusCode == 200){
+      final codeUnits = response.body.codeUnits;
+      var jsonData = const Utf8Decoder().convert(codeUnits);
+      allBlockedUsers = json.decode(jsonData);
+      for(var i in allBlockedUsers){
+        if(!blockedUsernames.contains(i['get_username'])){
+          blockedUsernames.add(i['get_username']);
+        }
+      }
+
+    }
+
+    setState(() {
+      isLoading = false;
+      allBlockedUsers = allBlockedUsers;
     });
   }
 
@@ -56,6 +84,10 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
       username = storage.read("username");
     }
     pageController = PageController(initialPage: selectedIndex);
+    fetchBlockedAgents();
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      fetchBlockedAgents();
+    });
   }
 
   @override
@@ -67,7 +99,9 @@ class _MyBottomNavigationBarState extends State<MyBottomNavigationBar> {
   @override
   Widget build(BuildContext context){
     return SafeArea(
-      child:Scaffold(
+      child:blockedUsernames.contains(username) ? const Scaffold(
+          body: AccountBlockNotification()
+      ) :Scaffold(
         bottomNavigationBar: NavigationBarTheme(
           data: NavigationBarThemeData(
               indicatorColor: Colors.blue.shade100,
