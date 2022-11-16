@@ -15,9 +15,13 @@ class LocatePickUpOnMap extends StatefulWidget {
 
 class _LocatePickUpOnMapState extends State<LocatePickUpOnMap> {
 
-  String pickUp;_LocatePickUpOnMapState({required this.pickUp});
+  String pickUp;
+  _LocatePickUpOnMapState({required this.pickUp});
   late GoogleMapController mapController;
   late String pickedPickedName = "nothing";
+  late double pickUpLat = 0.0;
+  late double pickUpLng = 0.0;
+
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -41,6 +45,8 @@ class _LocatePickUpOnMapState extends State<LocatePickUpOnMap> {
               pickedPickedName != "nothing" ?  TextButton(
                 onPressed: () {
                   _mapController.setPickUpLocation(pickedPickedName);
+                  _mapController.setPickUpLat(pickUpLat);
+                  _mapController.setPickUpLng(pickUpLng);
 // _mapController.dropOffLocation.text = pickedDropOffName;
                   Get.back();
                 },
@@ -61,6 +67,8 @@ class _LocatePickUpOnMapState extends State<LocatePickUpOnMap> {
                   onTap: (latLng)async {
 
                     List<Placemark> placemark = await placemarkFromCoordinates(latLng.latitude,latLng.longitude);
+                    pickUpLat = latLng.latitude;
+                    pickUpLng = latLng.longitude;
 
                     setState(() {
                       pickedPickedName = placemark[2].street!;

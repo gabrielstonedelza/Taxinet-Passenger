@@ -18,6 +18,8 @@ class _LocateOnMapState extends State<LocateOnMap> {
   String dropOff;_LocateOnMapState({required this.dropOff});
   late GoogleMapController mapController;
   late String pickedDropOffName = "nothing";
+  late double dropOffLat = 0.0;
+  late double dropOffLng = 0.0;
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
@@ -41,6 +43,9 @@ class _LocateOnMapState extends State<LocateOnMap> {
             pickedDropOffName != "nothing" ? TextButton(
                 onPressed: () {
                   _mapController.setDropOffLocation(pickedDropOffName);
+                  _mapController.setDropOffLat(dropOffLat);
+                  _mapController.setDropOffLng(dropOffLng);
+
 // _mapController.dropOffLocation.text = pickedDropOffName;
                   Get.back();
                 },
@@ -62,6 +67,8 @@ class _LocateOnMapState extends State<LocateOnMap> {
                   List<Placemark> placemark = await placemarkFromCoordinates(latLng.latitude,latLng.longitude);
                   setState(() {
                     pickedDropOffName = placemark[2].street!;
+                    dropOffLat = latLng.latitude;
+                    dropOffLng = latLng.longitude;
                   });
                 }
             ),

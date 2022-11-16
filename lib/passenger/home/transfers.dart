@@ -5,30 +5,31 @@ import "package:flutter/material.dart";
 import 'package:get_storage/get_storage.dart';
 import "package:get/get.dart";
 import '../../../constants/app_colors.dart';
-import '../../../g_controller/userController.dart';
-import '../../../widgets/shimmers/shimmerwidget.dart';
 import 'package:http/http.dart' as http;
 
-class SendFromWalletToDriver extends StatefulWidget {
-  const SendFromWalletToDriver({Key? key}) : super(key: key);
+import '../../g_controller/userController.dart';
+
+class Transfers extends StatefulWidget {
+  const Transfers({Key? key}) : super(key: key);
 
   @override
-  State<SendFromWalletToDriver> createState() => _SendFromWalletToDriverState();
+  State<Transfers> createState() => _TransfersState();
 }
 
-class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
+class _TransfersState extends State<Transfers> {
   final storage = GetStorage();
   var username = "";
   String uToken = "";
-  final TextEditingController _driverUniqueCode = TextEditingController();
+  final TextEditingController _userUniqueCode = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   UserController userController = Get.find();
-  bool isDriversCode = false;
+  bool isOwnCode = false;
   late List driversDetails = [];
-  String driversName = "";
-  String driversPicture = "";
-  String driverId = "";
+  String userName = "";
+  String userType = "";
+  String fullName = "";
+  String userId = "";
   bool isLoading = true;
   bool isPosting = false;
   late double sendersWallet = 0.0;
@@ -48,19 +49,21 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
     });
   }
 
-  Future<void> getDriverProfile(String uniqueCode) async {
+  Future<void> getUserDetails(String uniqueCode) async {
     final profileLink =
-        "https://taxinetghana.xyz/get_drivers_profile_by_unique_code/$uniqueCode/";
+        "https://taxinetghana.xyz/get_user_by_unique_code/$uniqueCode/";
     var link = Uri.parse(profileLink);
     http.Response response = await http.get(link, headers: {
       "Content-Type": "application/x-www-form-urlencoded",
     });
     if (response.statusCode == 200) {
+      print(response.body);
       final codeUnits = response.body;
       var jsonData = jsonDecode(codeUnits);
-      driversName = jsonData['get_drivers_full_name'];
-      driversPicture = jsonData['driver_profile_pic'];
-      driverId = jsonData['user'].toString();
+      userName = jsonData['username'];
+      userType = jsonData['user_type'];
+      userId = jsonData['id'].toString();
+      fullName = jsonData['full_name'];
       getReceiversWallet();
     } else {
       if (kDebugMode) {
@@ -101,7 +104,7 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
   //get wallet detail for Receiver
   Future<void> getReceiversWallet() async {
     final profileLink =
-        "https://taxinetghana.xyz/get_wallet_by_user/$driverId/";
+        "https://taxinetghana.xyz/get_wallet_by_user/$userId/";
     var link = Uri.parse(profileLink);
     http.Response response = await http.get(link, headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -131,7 +134,7 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
     }, body: {
       // "passenger": userid,
       "sender": userController.passengerProfileId,
-      "receiver": driverId,
+      "receiver": userId,
       "amount": _amountController.text.trim(),
     });
     if (res.statusCode == 201) {
@@ -143,8 +146,8 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
       processUpdateReceiversWallet();
       setState(() {
         _amountController.text = "";
-        _driverUniqueCode.text = "";
-        isDriversCode = false;
+        _userUniqueCode.text = "";
+        isOwnCode = false;
         amountGreaterThanBalance = false;
         amountHasValue = false;
       });
@@ -175,14 +178,14 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
 
   //update receivers wallet
   processUpdateReceiversWallet() async {
-    final depositUrl = "https://taxinetghana.xyz/user_update_wallet/$driverId/";
+    final depositUrl = "https://taxinetghana.xyz/user_update_wallet/$userId/";
     final myLink = Uri.parse(depositUrl);
     final res = await http.put(myLink, headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       "Authorization": "Token $uToken"
     }, body: {
       // "passenger": userid,
-      "user": driverId,
+      "user": userId,
       "amount": currentAmountForReceiver.toString(),
     });
     if (res.statusCode == 200) {
@@ -203,7 +206,7 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
     if (storage.read("username") != null) {
       username = storage.read("username");
     }
-    userController.getAllDrivers();
+    userController.getMyAllUsers();
     getSendersWallet();
   }
 
@@ -227,7 +230,7 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
                         padding: const EdgeInsets.only(bottom: 10.0),
                         child: TextFormField(
                           onChanged: (value) {
-                            if(value.length == 8 && value == userController.uniqueCode){
+                            if(value.length == userController.uniqueCode.length && value == userController.uniqueCode){
                               Get.snackbar("Transfer Error",
                                   "You cannot transfer to yourself",
                                   colorText: defaultTextColor1,
@@ -235,36 +238,39 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
                                   backgroundColor: Colors.red,
                                   duration: const Duration(seconds: 5));
                               setState(() {
-                                isDriversCode = false;
+                                isOwnCode = false;
                               });
                             }
-                            if (value.length == 8 &&
-                                userController.driversUniqueCodes
-                                    .contains(value)) {
-                              setState(() {
-                                isDriversCode = true;
-                              });
-                              getDriverProfile(_driverUniqueCode.text.trim());
-                            } else if (value.length == 8 &&
-                                !userController.driversUniqueCodes
-                                    .contains(value)) {
-                              Get.snackbar("Driver Error",
-                                  "can't find driver with unique code",
-                                  colorText: defaultTextColor1,
-                                  snackPosition: SnackPosition.TOP,
-                                  backgroundColor: Colors.red,
-                                  duration: const Duration(seconds: 5));
-                              setState(() {
-                                isDriversCode = false;
-                              });
+                            else{
+                              if (value.length == userController.uniqueCode.length &&
+                                  userController.allUsersUniqueCodes
+                                      .contains(value)) {
+                                setState(() {
+                                  isOwnCode = true;
+                                });
+                                getUserDetails(_userUniqueCode.text.trim());
+                              } else if (value.length == 8 &&
+                                  !userController.allUsersUniqueCodes
+                                      .contains(value)) {
+                                Get.snackbar("Code Error",
+                                    "can't find user with unique code",
+                                    colorText: defaultTextColor1,
+                                    snackPosition: SnackPosition.TOP,
+                                    backgroundColor: Colors.red,
+                                    duration: const Duration(seconds: 5));
+                                setState(() {
+                                  isOwnCode = false;
+                                });
+                              }
                             }
+
                           },
-                          controller: _driverUniqueCode,
+                          controller: _userUniqueCode,
                           cursorRadius: const Radius.elliptical(3, 3),
                           cursorWidth: 3,
                           cursorColor: defaultBlack,
                           decoration: const InputDecoration(
-                            labelText: "Enter drivers unique code",
+                            labelText: "Enter users unique code",
                             labelStyle: TextStyle(color: secondaryColor),
                             focusColor: primaryColor,
                             fillColor: primaryColor,
@@ -273,7 +279,7 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
                           keyboardType: TextInputType.text,
                           validator: (value) {
                             if (value!.isEmpty) {
-                              return "Please enter drivers unique code";
+                              return "Please enter unique code";
                             }
                           },
                         ),
@@ -290,7 +296,7 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
                                 amountGreaterThanBalance = true;
                                 amountHasValue = false;
                                 amountError =
-                                    "Your balance is less than what you are trying to send";
+                                "Your balance is less than what you are trying to send";
                               });
                             } else {
                               setState(() {
@@ -310,8 +316,6 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
                             }
                           },
                           controller: _amountController,
-                          // cursorColor:
-                          // primaryColor,
                           cursorRadius: const Radius.elliptical(3, 3),
                           cursorWidth: 3,
                           cursorColor: defaultBlack,
@@ -332,80 +336,67 @@ class _SendFromWalletToDriverState extends State<SendFromWalletToDriver> {
                       ),
                       amountGreaterThanBalance
                           ? Center(
-                              child: Text(amountError,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)))
+                          child: Text(amountError,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold)))
                           : Container(),
                       const SizedBox(height: 20),
                       !isPosting &&
-                              isDriversCode &&
-                              amountHasValue &&
-                              !amountGreaterThanBalance
+                          isOwnCode &&
+                          amountHasValue &&
+                          !amountGreaterThanBalance
                           ? RawMaterialButton(
-                              onPressed: () {
-                                _startPosting();
-                                if (_formKey.currentState!.validate()) {
-                                  processWalletTransfer();
-                                  setState(() {
-                                    currentAmountForSender = sendersWallet -
-                                        double.parse(
-                                            _amountController.text.trim());
-                                    currentAmountForReceiver = receiversWallet +
-                                        double.parse(
-                                            _amountController.text.trim());
-                                  });
-                                }
-                              },
-                              // child: const Text("Send"),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                              elevation: 8,
-                              fillColor: defaultBlack,
-                              splashColor: defaultColor,
-                              child: const Text(
-                                "Send",
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: defaultTextColor1),
-                              ),
-                            )
+                        onPressed: () {
+                          _startPosting();
+                          if (_formKey.currentState!.validate()) {
+                            processWalletTransfer();
+                            setState(() {
+                              currentAmountForSender = sendersWallet -
+                                  double.parse(
+                                      _amountController.text.trim());
+                              currentAmountForReceiver = receiversWallet +
+                                  double.parse(
+                                      _amountController.text.trim());
+                            });
+                          }
+                        },
+                        // child: const Text("Send"),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        elevation: 8,
+                        fillColor: defaultBlack,
+                        splashColor: defaultColor,
+                        child: const Text(
+                          "Send",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: defaultTextColor1),
+                        ),
+                      )
                           : Container(),
                       const SizedBox(height: 20),
-                      isDriversCode
+                      isOwnCode
                           ? SlideInUp(
-                              animate: true,
-                              child: Card(
-                                  elevation: 12,
-                                  shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(25.0))),
-                                  child: SizedBox(
-                                    width: 300,
-                                    height: 150,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Expanded(
-                                          child: isLoading
-                                              ? const ShimmerWidget.circular(
-                                                  width: 100, height: 100)
-                                              : CircleAvatar(
-                                                  backgroundImage: NetworkImage(
-                                                      driversPicture),
-                                                  radius: 40,
-                                                ),
-                                        ),
-                                        Expanded(
-                                            child: Text(driversName,
-                                                style: const TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold)))
-                                      ],
-                                    ),
-                                  )),
-                            )
+                        animate: true,
+                        child: Card(
+                            elevation: 12,
+                            shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(25.0))),
+                            child: SizedBox(
+                              width: 200,
+                              height: 120,
+                              child: Column(
+                                mainAxisAlignment:
+                                MainAxisAlignment.center,
+                                children: [
+                                  Text(fullName,style:const TextStyle(fontWeight: FontWeight.bold)),
+                                  Text(userName)
+                                ],
+                              ),
+                            )),
+                      )
                           : Container(),
                     ],
                   ),

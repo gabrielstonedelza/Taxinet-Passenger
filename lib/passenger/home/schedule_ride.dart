@@ -44,6 +44,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
   late final  TextEditingController _scheduleDescriptionController = TextEditingController();
 
   late final  TextEditingController _pickUpLocationController = TextEditingController();
+  late final  TextEditingController _myLocationUpLocationController;
 
   late final  TextEditingController _dropOffLocationController =  TextEditingController();
 
@@ -74,6 +75,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
   double initialBonus = 0.0;
   String walletId = "";
   bool isLoading = true;
+  bool isPickingFromMap = false;
 
   Future<void> getPromoterWallet() async {
     final walletUrl = "https://taxinetghana.xyz/get_wallet_by_username/${userController.promoterName}/";
@@ -88,9 +90,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
       promoter = jsonData['user'].toString();
       initialBonus = double.parse(jsonData['amount']);
       walletId = jsonData['id'].toString();
-      print(promoter);
-      print(initialBonus);
-      print(walletId);
     }
     else{
       if (kDebugMode) {
@@ -143,8 +142,10 @@ class _ScheduleRideState extends State<ScheduleRide> {
       "drop_off_location": _dropOffLocationController.text,
       "pick_up_time": _pickUpTimeController.text,
       "start_date": _startDateController.text,
-      "drop_off_lat": _mapController.userLatitude.toString(),
-      "drop_off_lng": _mapController.userLongitude.toString(),
+      "drop_off_lat": _mapController.userDropOffLatitude.toString(),
+      "drop_off_lng": _mapController.userDropOffLng.toString(),
+      "pickup_lng": isPickingFromMap ? _mapController.userPickUpLng.toString() : _mapController.userLongitude.toString(),
+      "pickup_lat":isPickingFromMap ? _mapController.userPickUpLatitude.toString(): _mapController.userLatitude.toString(),
       "days": _daysController.text,
     });
     if (response.statusCode == 201) {
@@ -202,6 +203,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
       username = storage.read("username");
     }
     getPromoterWallet();
+    _myLocationUpLocationController = TextEditingController(text:_mapController.myLocationName);
   }
 
   @override
@@ -260,7 +262,13 @@ class _ScheduleRideState extends State<ScheduleRide> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.location_on,color:Colors.green),
+                      Text(_mapController.myLocationName,style:const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                   const SizedBox(height: 15,),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10.0),
@@ -339,6 +347,8 @@ class _ScheduleRideState extends State<ScheduleRide> {
                       }
                     },
                   ) : Container(),
+                  const SizedBox(height: 15,),
+                  const Text("Want to pick a new location?",style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 15,),
                   GetBuilder<MapController>(builder: (controller){
                     return Padding(
@@ -428,7 +438,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10.0),
                     child: TextFormField(
-
                       controller: _startDateController,
                       cursorColor: primaryColor,
                       cursorRadius: const Radius.elliptical(10, 10),
@@ -520,7 +529,8 @@ class _ScheduleRideState extends State<ScheduleRide> {
                       Colors.black
                     ),
                   ),
-                ) :  Container(
+                ) :
+                Container(
                     decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         color: primaryColor

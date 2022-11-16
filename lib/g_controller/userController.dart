@@ -57,6 +57,7 @@ class UserController extends GetxController {
   late List passengerNames = [];
   late List passengersUniqueCodes = [];
   late List allPassengers = [];
+  late List allUsersUniqueCodes = [];
 
 
   bool isLoading = true;
@@ -64,6 +65,7 @@ class UserController extends GetxController {
   bool isUploading = false;
   late Timer _timer;
   File? image;
+  late List profileDetails1 = [];
 
 
   @override
@@ -352,7 +354,6 @@ class UserController extends GetxController {
           verified = i['verified'];
           passengerProfileId = i['user'].toString();
           passengerUsername = i['username'].toString();
-          uniqueCode = i['unique_code'];
         }
         update();
         storage.write("verified", "Verified");
@@ -410,11 +411,10 @@ class UserController extends GetxController {
       isLoading = false;
     }
   }
-
-  Future<void> getAllDrivers() async {
+  Future<void> getMyAllUsers() async {
     try {
       isLoading = true;
-      const profileLink = "https://taxinetghana.xyz/all_drivers_profile/";
+      const profileLink = "https://taxinetghana.xyz/all_users/";
       var link = Uri.parse(profileLink);
       http.Response response = await http.get(link, headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -423,11 +423,8 @@ class UserController extends GetxController {
         var jsonData = jsonDecode(response.body);
         allDrivers = jsonData;
         for (var i in allDrivers) {
-          if(!driversUniqueCodes.contains(i['unique_code'])){
-            driversUniqueCodes.add(i['unique_code']);
-          }
-          if(!driversNames.contains(i['get_drivers_full_name'])){
-            driversNames.add(i['get_drivers_full_name']);
+          if(!allUsersUniqueCodes.contains(i['unique_code'])){
+            allUsersUniqueCodes.add(i['unique_code']);
           }
         }
         update();
@@ -435,7 +432,7 @@ class UserController extends GetxController {
       }
       else{
         if (kDebugMode) {
-          print(response.body);
+          print("response.body");
         }
       }
     } catch (e) {
@@ -447,27 +444,23 @@ class UserController extends GetxController {
     }
   }
 
-  Future<void> getAllPassengers() async {
+  Future<void> getUserDetails(String token) async {
     try {
       isLoading = true;
-      const profileLink = "https://taxinetghana.xyz/all_passengers_profile/";
+      const profileLink = "https://taxinetghana.xyz/get_user/";
       var link = Uri.parse(profileLink);
       http.Response response = await http.get(link, headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": "Token $token"
       });
       if (response.statusCode == 200) {
         var jsonData = jsonDecode(response.body);
-        allPassengers = jsonData;
-        for (var i in allPassengers) {
-          if(!passengersUniqueCodes.contains(i['unique_code'])){
-            passengersUniqueCodes.add(i['unique_code']);
-          }
-          if(!passengerNames.contains(i['get_passengers_full_name'])){
-            passengerNames.add(i['get_passengers_full_name']);
-          }
+        profileDetails1 = jsonData;
+        // print(profileDetails1);
+        for (var i in profileDetails1) {
+          uniqueCode = i['unique_code'];
         }
         update();
-
       }
       else{
         if (kDebugMode) {

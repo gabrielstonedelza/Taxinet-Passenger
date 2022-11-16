@@ -21,7 +21,7 @@ import '../mapscontroller.dart';
 import '../onboarding/passenger/passenger_intro.dart';
 import '../passenger/home/pages/notifications.dart';
 import '../passenger/home/paymentmethods.dart';
-import '../passenger/home/payments.dart';
+import '../passenger/home/transfers.dart';
 import '../widgets/shimmers/shimmerwidget.dart';
 
 class WelcomeOptions extends StatefulWidget {
@@ -186,8 +186,9 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
     _mapController.getUserLocation();
     userController.getUserProfile(uToken);
     userController.getAllUsers(uToken);
-    userController.getAllDrivers();
-    userController.getAllPassengers();
+    userController.getMyAllUsers();
+    userController.getUserDetails(uToken);
+
     walletController.getUserWallet(uToken);
     notificationController.getAllNotifications(uToken);
     notificationController.getAllUnReadNotifications(uToken);
@@ -196,8 +197,8 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
     _timer = Timer.periodic(const Duration(seconds: 20), (timer) {
       userController.getUserProfile(uToken);
       userController.getAllUsers(uToken);
-      userController.getAllDrivers();
-      userController.getAllPassengers();
+      userController.getMyAllUsers();
+      userController.getUserDetails(uToken);
       walletController.getUserWallet(uToken);
       notificationController.getAllNotifications(uToken);
       notificationController.getAllUnReadNotifications(uToken);
@@ -458,7 +459,8 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                           fontSize: 15)),
                             ],
                           );
-                        })),
+                        })
+                        ),
                       ),
                       const SizedBox(height: 20),
                     ],
@@ -536,14 +538,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                               borderRadius: BorderRadius.circular(12),
                               child: GestureDetector(
                                 onTap: () {
-                                  walletController.canBook
-                                      ? Get.to(() => const ScheduleRide())
-                                      : Get.snackbar("Sorry 😭",
-                                          "your wallet is low,please load wallet.",
-                                          duration: const Duration(seconds: 8),
-                                          snackPosition: SnackPosition.BOTTOM,
-                                          backgroundColor: Colors.red,
-                                          colorText: defaultTextColor1);
+                                  Get.to(() => const ScheduleRide());
                                 },
                                 child: Container(
                                   width: 150,

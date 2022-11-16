@@ -8,6 +8,10 @@ import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 class MapController extends GetxController{
   late double userLatitude = 0.0;
   late double userLongitude = 0.0;
+  late double userPickUpLatitude = 0.0;
+  late double userPickUpLng = 0.0;
+  late double userDropOffLatitude = 0.0;
+  late double userDropOffLng = 0.0;
   late StreamSubscription<Position> streamSubscription;
   late String myLocationName = "";
   late String dPlaceId = "";
@@ -24,6 +28,27 @@ class MapController extends GetxController{
     dropOffLocation = dropOff;
     update();
   }
+
+  void setPickUpLat(double lat){
+    userPickUpLatitude = lat;
+    update();
+  }
+
+  void setPickUpLng(double lng){
+    userPickUpLng = lng;
+    update();
+  }
+
+  void setDropOffLat(double lat){
+    userDropOffLatitude = lat;
+    update();
+  }
+
+  void setDropOffLng(double lng){
+    userDropOffLng = lng;
+    update();
+  }
+
 
   //
   late String administrativeArea = '';
