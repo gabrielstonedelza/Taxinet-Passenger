@@ -75,6 +75,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
   double initialBonus = 0.0;
   String walletId = "";
   bool isLoading = true;
+
   bool isPickingFromMap = false;
 
   Future<void> getPromoterWallet() async {
@@ -545,7 +546,6 @@ class _ScheduleRideState extends State<ScheduleRide> {
                         _startPosting();
                         if (_formKey.currentState!.validate()) {
                           scheduleRide();
-
                         } else {
                           Get.snackbar("Error", "Something went wrong",
                               colorText: defaultTextColor2,

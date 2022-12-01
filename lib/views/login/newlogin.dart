@@ -224,7 +224,8 @@ class _NewLoginState extends State<NewLogin> {
                           Colors.black
                       ),
                     ),
-                  ):   RawMaterialButton(
+                  ):
+                  RawMaterialButton(
                     onPressed: () {
                       FocusScopeNode currentFocus = FocusScope.of(context);
 

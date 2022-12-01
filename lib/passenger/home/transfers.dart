@@ -57,7 +57,6 @@ class _TransfersState extends State<Transfers> {
       "Content-Type": "application/x-www-form-urlencoded",
     });
     if (response.statusCode == 200) {
-      print(response.body);
       final codeUnits = response.body;
       var jsonData = jsonDecode(codeUnits);
       userName = jsonData['username'];
