@@ -22,10 +22,11 @@ class _PaymentMethodsState extends State<PaymentMethods> {
   List paymentOptions =[
     "Select Payment Option",
     "Mobile Money",
-    "Bank",
+    "Ecobank",
   ];
   String _currentSelectedPaymentOption = "Select Payment Option";
   String message = "";
+  String message2 = "";
   late final TextEditingController transactionIdController;
   late final TextEditingController amountController;
   final _formKey = GlobalKey<FormState>();
@@ -47,6 +48,7 @@ class _PaymentMethodsState extends State<PaymentMethods> {
   final storage = GetStorage();
   var username = "";
   bool isMobileMoney = false;
+  bool isEcoBank = false;
 
   requestTopUp() async {
     const requestUrl = "https://taxinetghana.xyz/request_top_up/";
@@ -183,15 +185,23 @@ class _PaymentMethodsState extends State<PaymentMethods> {
                           if(newValueSelected == "Mobile Money"){
                             setState(() {
                               isMobileMoney = true;
+                              isEcoBank = false;
                               message = "Please send mobile money to 0244950505,get transaction id,enter transaction id below to continue.";
                             });
                           }
-                          else{
+                          if(newValueSelected == "Ecobank"){
                             setState(() {
-                              message = "";
                               isMobileMoney = false;
+                              isEcoBank = true;
+                              message = "Please send from your Xpress accounts to Taxinet Logistics account(1441002567287),get the transaction id and complete the form.";
                             });
                           }
+                          // else{
+                          //   setState(() {
+                          //     message = "";
+                          //     isMobileMoney = false;
+                          //   });
+                          // }
                         },
                         value: _currentSelectedPaymentOption,
                       ),
@@ -303,7 +313,13 @@ class _PaymentMethodsState extends State<PaymentMethods> {
                   child: Center(
                     child: Text(message,style: const TextStyle(fontWeight: FontWeight.bold))
                   ),
-                ) : Container()
+                ) : Container(),const SizedBox(height:20),
+                isEcoBank ? SlideInUp(
+                  animate: true,
+                  child: Center(
+                      child: Text(message,style: const TextStyle(fontWeight: FontWeight.bold))
+                  ),
+                ) : Container(),
               ],
             ),
           ),
