@@ -557,7 +557,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                         const Expanded(
                                             child: Center(
                                           child: Text(
-                                            "Taxinet Ride",
+                                            "Ride",
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 12,
@@ -578,7 +578,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                               child: GestureDetector(
                                 onTap: () {
                                   Get.snackbar(
-                                      "Hi 😛", "Taxinet Luxury coming soon",
+                                      "Hi 😛", "Luxury coming soon",
                                       snackPosition: SnackPosition.BOTTOM,
                                       duration: const Duration(seconds: 5),
                                       colorText: Colors.white,
@@ -600,7 +600,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                         const SizedBox(height: 10),
                                         const Expanded(
                                             child: Center(
-                                          child: Text("Taxinet Luxury",
+                                          child: Text("Luxury",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 12,
@@ -635,7 +635,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                               child: GestureDetector(
                                 onTap: () {
                                   Get.snackbar(
-                                      "Hi 😛", "Taxinet Truck coming soon",
+                                      "Hi 😛", "Truck coming soon",
                                       snackPosition: SnackPosition.BOTTOM,
                                       duration: const Duration(seconds: 5),
                                       colorText: Colors.white,
@@ -657,7 +657,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                         const SizedBox(height: 10),
                                         const Expanded(
                                             child: Center(
-                                          child: Text("Taxinet Truck",
+                                          child: Text("Truck",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 12,
@@ -678,7 +678,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                 onTap: () {
                                   Get.snackbar(
                                     "Hi 😛",
-                                    "Taxinet Delivery coming soon",
+                                    "Delivery coming soon",
                                     snackPosition: SnackPosition.BOTTOM,
                                     duration: const Duration(seconds: 5),
                                     colorText: Colors.white,
@@ -701,7 +701,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                         const SizedBox(height: 10),
                                         const Expanded(
                                             child: Center(
-                                          child: Text("Taxinet Delivery",
+                                          child: Text("Delivery",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 12,
@@ -733,7 +733,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                               child: GestureDetector(
                                 onTap: () {
                                   Get.snackbar(
-                                      "Hi 😛", "Taxinet Bus coming soon",
+                                      "Hi 😛", "Bus coming soon",
                                       snackPosition: SnackPosition.BOTTOM,
                                       duration: const Duration(seconds: 5),
                                       colorText: Colors.white,
@@ -757,7 +757,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                         SizedBox(height: 10),
                                         Expanded(
                                             child: Center(
-                                          child: Text("Taxinet Bus",
+                                          child: Text("Bus",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 12,
@@ -778,7 +778,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                 onTap: () {
                                   Get.snackbar(
                                     "Hi 😛",
-                                    "Taxinet Tickets coming soon",
+                                    "Tickets coming soon",
                                     snackPosition: SnackPosition.BOTTOM,
                                     duration: const Duration(seconds: 5),
                                     colorText: Colors.white,
@@ -806,7 +806,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                         SizedBox(height: 10),
                                         Expanded(
                                             child: Center(
-                                          child: Text("Taxinet Tickets",
+                                          child: Text("Tickets",
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 12,
@@ -837,7 +837,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                               child: GestureDetector(
                                 onTap: () {
                                   Get.snackbar(
-                                      "Hi 😛", "Taxinet workshop coming soon",
+                                      "Hi 😛", "workshop coming soon",
                                       snackPosition: SnackPosition.BOTTOM,
                                       duration: const Duration(seconds: 5),
                                       colorText: Colors.white,
@@ -859,7 +859,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                         const SizedBox(height: 10),
                                         const Expanded(
                                             child: Center(
-                                              child: Text("Taxinet Workshop",
+                                              child: Text("Workshop",
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 12,
@@ -906,7 +906,7 @@ class _WelcomeOptionsState extends State<WelcomeOptions> {
                                         const SizedBox(height: 10),
                                         const Expanded(
                                             child: Center(
-                                              child: Text("Taxinet Hotels",
+                                              child: Text("Hotels",
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.bold,
                                                     fontSize: 12,
